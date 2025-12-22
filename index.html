@@ -1,0 +1,381 @@
+<!-- =========================
+     FILE: about.html
+     About — Mybookie
+     ========================= -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About Mybookie — The e-Library</title>
+  <meta name="description" content="Learn what Mybookie is: a modern upcoming e-library for discovering and reading ebooks with focus, speed, and smart organization." />
+  <meta name="theme-color" content="#121318" />
+
+  <style>
+    :root{
+      --bg:#121318;
+      --bg2:#161823;
+      --card:#1b1e2b;
+      --text:#e9ecff;
+      --muted:#a7adcc;
+      --border:rgba(255,255,255,.08);
+      --accent:#7c5cff;
+      --accent2:#35d0ff;
+      --good:#2be4a7;
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --max: 1080px;
+      --radius: 22px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1100px 650px at 12% 12%, rgba(124,92,255,.22), transparent 60%),
+        radial-gradient(900px 650px at 85% 18%, rgba(53,208,255,.16), transparent 55%),
+        radial-gradient(1000px 700px at 50% 95%, rgba(43,228,167,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      overflow-x:hidden;
+    }
+    a{color:inherit; text-decoration:none}
+    button, input{font:inherit}
+
+    /* Fade-in page */
+    .page{
+      opacity:0;
+      transform: translateY(8px);
+      animation: enter .45s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    @keyframes enter{to{opacity:1; transform: translateY(0)}}
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(18,19,24,.75), rgba(18,19,24,.35));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .topbar-inner{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 18px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+    }
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{
+      width:40px; height:40px; border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 45%),
+        linear-gradient(135deg, rgba(124,92,255,.95), rgba(53,208,255,.85));
+      box-shadow: 0 16px 40px rgba(124,92,255,.18);
+    }
+    .brand h1{margin:0; font-size:14px; letter-spacing:.4px; font-weight:800; line-height:1.1}
+    .brand small{display:block; margin-top:3px; color:var(--muted); font-size:12px}
+    .nav{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .pill{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+    .pill:hover{transform: translateY(-1px); background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.14)}
+    .pill.active{background: rgba(124,92,255,.14); border-color: rgba(124,92,255,.45)}
+    .cta{
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(53,208,255,.78));
+      color:#0b0c10;
+      font-weight:850;
+      cursor:pointer;
+      transition: transform .2s ease, filter .2s ease;
+    }
+    .cta:hover{transform: translateY(-1px); filter:saturate(1.12)}
+
+    .container{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 22px 18px 70px;
+    }
+
+    .hero{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.18));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      padding: 22px;
+      position:relative;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-30%;
+      background:
+        radial-gradient(520px 260px at 15% 30%, rgba(124,92,255,.18), transparent 60%),
+        radial-gradient(520px 260px at 85% 70%, rgba(53,208,255,.12), transparent 60%);
+      pointer-events:none;
+    }
+    .hero > *{position:relative; z-index:1}
+
+    .kicker{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size:13px;
+      margin-bottom: 12px;
+    }
+    .dot{
+      width:9px; height:9px; border-radius:50%;
+      background: var(--good);
+      box-shadow: 0 0 0 0 rgba(43,228,167,.26);
+      animation: pulse 1.8s ease-out infinite;
+    }
+    @keyframes pulse{
+      0%{box-shadow: 0 0 0 0 rgba(43,228,167,.26)}
+      70%{box-shadow: 0 0 0 12px rgba(43,228,167,0)}
+      100%{box-shadow: 0 0 0 0 rgba(43,228,167,0)}
+    }
+
+    h2{
+      margin:0 0 10px;
+      font-size: 40px;
+      line-height: 1.05;
+      letter-spacing: -.5px;
+    }
+    p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15.5px;
+      max-width: 76ch;
+    }
+
+    .grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+    .card{
+      grid-column: span 6;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      padding: 16px;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .card:hover{transform: translateY(-2px); background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.14)}
+    .card h3{margin:0 0 6px; font-size:16px}
+    .card p{font-size:14px}
+    @media (max-width: 860px){ .card{grid-column: span 12} }
+
+    .pilltag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 12.5px;
+      margin-right: 8px;
+      margin-top: 10px;
+    }
+    .pilltag i{
+      width:7px; height:7px; border-radius:50%;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(124,92,255,.10);
+      display:inline-block;
+    }
+
+    .timeline{
+      margin-top: 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.16);
+      padding: 16px;
+    }
+    .step{
+      display:flex; gap:12px;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .step:first-child{border-top:0}
+    .num{
+      width:34px; height:34px;
+      border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(124,92,255,.16);
+      border: 1px solid rgba(124,92,255,.45);
+      font-weight: 850;
+    }
+    .step b{display:block; margin-bottom: 4px}
+    .step span{color: var(--muted); line-height:1.6}
+
+    footer{
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size: 13px;
+      display:flex; gap:12px; flex-wrap:wrap;
+      justify-content:space-between; align-items:center;
+    }
+    .links{display:flex; gap:12px; flex-wrap:wrap}
+    .links a{color: var(--muted)}
+    .links a:hover{color: var(--text)}
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html" aria-label="Mybookie Home">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>Mybookie</h1>
+            <small>The e-Library</small>
+          </div>
+        </a>
+
+        <nav class="nav" aria-label="Primary navigation">
+          <a class="pill" href="index.html">Library</a>
+          <a class="pill active" href="about.html">About</a>
+          <button class="cta" id="ctaBtn" type="button">Get Early Access</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div class="kicker"><span class="dot" aria-hidden="true"></span> About Mybookie</div>
+        <h2>Mybookie is built for readers who want less noise — and more meaning.</h2>
+        <p>
+          Mybookie — The e-Library is an upcoming ebook solution designed around one simple idea:
+          <strong>discovery should be effortless, reading should feel calm, and your library should stay organized.</strong>
+          We’re building a modern platform where you can explore curated ebooks, save what matters, and keep your
+          reading journey consistent — without getting lost in clutter.
+        </p>
+
+        <div style="margin-top:12px;">
+          <span class="pilltag"><i aria-hidden="true"></i>Fast search</span>
+          <span class="pilltag"><i aria-hidden="true"></i>Curated collections</span>
+          <span class="pilltag"><i aria-hidden="true"></i>Clean dark UI</span>
+          <span class="pilltag"><i aria-hidden="true"></i>Reading momentum</span>
+        </div>
+      </section>
+
+      <section class="grid" aria-label="What makes Mybookie different">
+        <div class="card">
+          <h3>1) Discovery that respects your time</h3>
+          <p>
+            Mybookie highlights what’s worth reading. Think: topic filters, intent-based browsing, and curated
+            shelves that cut through the noise.
+          </p>
+        </div>
+        <div class="card">
+          <h3>2) A library you can actually manage</h3>
+          <p>
+            Save books, build lists, and keep track of what you want to read next. No more “I’ll remember it later.”
+            Your library stays tidy.
+          </p>
+        </div>
+        <div class="card">
+          <h3>3) A dark experience that feels premium</h3>
+          <p>
+            A calm, dark gray theme with subtle motion. Smooth transitions, clean typography, and UI that stays out of
+            the way while you focus.
+          </p>
+        </div>
+        <div class="card">
+          <h3>4) Built to scale into a complete solution</h3>
+          <p>
+            Today: a polished library experience. Next: accounts, syncing, reading progress, recommendations, and more.
+            Mybookie is designed to grow.
+          </p>
+        </div>
+      </section>
+
+      <section class="timeline" aria-label="Roadmap">
+        <h3 style="margin:0 0 8px;">Roadmap (high-level)</h3>
+        <p style="margin:0 0 10px; color:var(--muted);">
+          A simple rollout plan to turn Mybookie into a full ebook solution.
+        </p>
+
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <b>Launch the core library experience</b>
+            <span>Fast search, categories, curated shelves, preview, and clean UI foundations.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <b>Accounts + saved library sync</b>
+            <span>Saved books across devices, lists, and a personal dashboard for reading intent.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <b>Reading progress + smart recommendations</b>
+            <span>Continue reading, lightweight tracking, and suggestions based on your taste — not hype.</span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div>© <span id="year"></span> Mybookie — The e-Library</div>
+        <div class="links">
+          <a href="index.html">Library</a>
+          <a href="#" id="privacy">Privacy</a>
+          <a href="#" id="terms">Terms</a>
+          <a href="#" id="support">Support</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = String(new Date().getFullYear());
+
+    function toast(msg){
+      const t = document.createElement("div");
+      t.style.position = "fixed";
+      t.style.right = "18px";
+      t.style.bottom = "18px";
+      t.style.padding = "12px 12px";
+      t.style.borderRadius = "16px";
+      t.style.border = "1px solid rgba(255,255,255,.12)";
+      t.style.background = "rgba(16,17,23,.82)";
+      t.style.backdropFilter = "blur(10px)";
+      t.style.boxShadow = "0 10px 28px rgba(0,0,0,.35)";
+      t.style.color = "var(--text)";
+      t.style.zIndex = "90";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(()=>{ t.style.opacity="0"; t.style.transform="translateY(8px)"; t.style.transition="all .25s ease"; }, 1500);
+      setTimeout(()=>t.remove(), 1850);
+    }
+
+    document.getElementById("ctaBtn").addEventListener("click", () => {
+      toast("Early access: connect this CTA to your waitlist form/newsletter.");
+    });
+
+    document.getElementById("privacy").addEventListener("click", (e)=>{ e.preventDefault(); toast("Privacy (placeholder)"); });
+    document.getElementById("terms").addEventListener("click", (e)=>{ e.preventDefault(); toast("Terms (placeholder)"); });
+    document.getElementById("support").addEventListener("click", (e)=>{ e.preventDefault(); toast("Support (placeholder)"); });
+  </script>
+</body>
+</html>
