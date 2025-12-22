@@ -1,381 +1,541 @@
-<!-- =========================
-     FILE: about.html
-     About — Mybookie
-     ========================= -->
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>About Mybookie — The e-Library</title>
-  <meta name="description" content="Learn what Mybookie is: a modern upcoming e-library for discovering and reading ebooks with focus, speed, and smart organization." />
-  <meta name="theme-color" content="#121318" />
+/* Mybookie demo site JS
+   - Animated type line
+   - On-scroll reveal
+   - Stat counters
+   - Mobile drawer
+   - Library render + filter + search
+   - Join modal
+   - Typing Arena mini-game (Play modal)
+*/
 
-  <style>
-    :root{
-      --bg:#121318;
-      --bg2:#161823;
-      --card:#1b1e2b;
-      --text:#e9ecff;
-      --muted:#a7adcc;
-      --border:rgba(255,255,255,.08);
-      --accent:#7c5cff;
-      --accent2:#35d0ff;
-      --good:#2be4a7;
-      --shadow: 0 18px 55px rgba(0,0,0,.45);
-      --max: 1080px;
-      --radius: 22px;
-    }
+(() => {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(1100px 650px at 12% 12%, rgba(124,92,255,.22), transparent 60%),
-        radial-gradient(900px 650px at 85% 18%, rgba(53,208,255,.16), transparent 55%),
-        radial-gradient(1000px 700px at 50% 95%, rgba(43,228,167,.10), transparent 60%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-      overflow-x:hidden;
-    }
-    a{color:inherit; text-decoration:none}
-    button, input{font:inherit}
+  const year = $("#year");
+  if (year) year.textContent = new Date().getFullYear();
 
-    /* Fade-in page */
-    .page{
-      opacity:0;
-      transform: translateY(8px);
-      animation: enter .45s cubic-bezier(.2,.8,.2,1) forwards;
-    }
-    @keyframes enter{to{opacity:1; transform: translateY(0)}}
+  // Topbar compact on scroll
+  const topbar = $("#topbar");
+  const onScroll = () => {
+    if (!topbar) return;
+    topbar.classList.toggle("isCompact", window.scrollY > 10);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 
-    /* Topbar */
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(180deg, rgba(18,19,24,.75), rgba(18,19,24,.35));
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .topbar-inner{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 14px 18px;
-      display:flex; align-items:center; justify-content:space-between; gap:14px;
-    }
-    .brand{display:flex; align-items:center; gap:10px}
-    .logo{
-      width:40px; height:40px; border-radius:14px;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 45%),
-        linear-gradient(135deg, rgba(124,92,255,.95), rgba(53,208,255,.85));
-      box-shadow: 0 16px 40px rgba(124,92,255,.18);
-    }
-    .brand h1{margin:0; font-size:14px; letter-spacing:.4px; font-weight:800; line-height:1.1}
-    .brand small{display:block; margin-top:3px; color:var(--muted); font-size:12px}
-    .nav{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
-    .pill{
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-      transition: transform .2s ease, background .2s ease, border-color .2s ease;
-      user-select:none;
-    }
-    .pill:hover{transform: translateY(-1px); background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.14)}
-    .pill.active{background: rgba(124,92,255,.14); border-color: rgba(124,92,255,.45)}
-    .cta{
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(53,208,255,.78));
-      color:#0b0c10;
-      font-weight:850;
-      cursor:pointer;
-      transition: transform .2s ease, filter .2s ease;
-    }
-    .cta:hover{transform: translateY(-1px); filter:saturate(1.12)}
+  // Mobile drawer
+  const drawer = $("#drawer");
+  const hamburger = $("#hamburger");
+  const drawerClose = $("#drawerClose");
 
-    .container{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 22px 18px 70px;
-    }
+  const openDrawer = () => {
+    if (!drawer || !hamburger) return;
+    drawer.classList.add("isOpen");
+    drawer.setAttribute("aria-hidden", "false");
+    hamburger.setAttribute("aria-expanded", "true");
+  };
+  const closeDrawer = () => {
+    if (!drawer || !hamburger) return;
+    drawer.classList.remove("isOpen");
+    drawer.setAttribute("aria-hidden", "true");
+    hamburger.setAttribute("aria-expanded", "false");
+  };
 
-    .hero{
-      border-radius: var(--radius);
-      border: 1px solid rgba(255,255,255,.08);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.18));
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      padding: 22px;
-      position:relative;
-    }
-    .hero:before{
-      content:"";
-      position:absolute; inset:-30%;
-      background:
-        radial-gradient(520px 260px at 15% 30%, rgba(124,92,255,.18), transparent 60%),
-        radial-gradient(520px 260px at 85% 70%, rgba(53,208,255,.12), transparent 60%);
-      pointer-events:none;
-    }
-    .hero > *{position:relative; z-index:1}
+  if (hamburger) hamburger.addEventListener("click", () => (drawer.classList.contains("isOpen") ? closeDrawer() : openDrawer()));
+  if (drawerClose) drawerClose.addEventListener("click", closeDrawer);
+  if (drawer) {
+    drawer.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (a) closeDrawer();
+    });
+  }
 
-    .kicker{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      color: var(--muted);
-      font-size:13px;
-      margin-bottom: 12px;
-    }
-    .dot{
-      width:9px; height:9px; border-radius:50%;
-      background: var(--good);
-      box-shadow: 0 0 0 0 rgba(43,228,167,.26);
-      animation: pulse 1.8s ease-out infinite;
-    }
-    @keyframes pulse{
-      0%{box-shadow: 0 0 0 0 rgba(43,228,167,.26)}
-      70%{box-shadow: 0 0 0 12px rgba(43,228,167,0)}
-      100%{box-shadow: 0 0 0 0 rgba(43,228,167,0)}
-    }
+  // Smooth scroll for same-page anchors (keeps things clean)
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const id = a.getAttribute("href");
+    const el = id && $(id);
+    if (!el) return;
 
-    h2{
-      margin:0 0 10px;
-      font-size: 40px;
-      line-height: 1.05;
-      letter-spacing: -.5px;
-    }
-    p{
-      margin:0;
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 15.5px;
-      max-width: 76ch;
-    }
+    e.preventDefault();
+    closeDrawer();
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
-    .grid{
-      margin-top: 14px;
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-    }
-    .card{
-      grid-column: span 6;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-      padding: 16px;
-      transition: transform .2s ease, border-color .2s ease, background .2s ease;
-      position:relative;
-      overflow:hidden;
-    }
-    .card:hover{transform: translateY(-2px); background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.14)}
-    .card h3{margin:0 0 6px; font-size:16px}
-    .card p{font-size:14px}
-    @media (max-width: 860px){ .card{grid-column: span 12} }
+  // Reveal on scroll
+  const revealEls = $$(".reveal");
+  if (revealEls.length) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((ent) => ent.isIntersecting && ent.target.classList.add("inView")),
+      { threshold: 0.12 }
+    );
+    revealEls.forEach((el) => io.observe(el));
+  }
 
-    .pilltag{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      color: var(--muted);
-      font-size: 12.5px;
-      margin-right: 8px;
-      margin-top: 10px;
-    }
-    .pilltag i{
-      width:7px; height:7px; border-radius:50%;
-      background: linear-gradient(180deg, var(--accent), var(--accent2));
-      box-shadow: 0 0 0 4px rgba(124,92,255,.10);
-      display:inline-block;
-    }
+  // Typewriter
+  const typeLine = $("#typeLine");
+  if (typeLine && typeLine.dataset.text) {
+    const txt = typeLine.dataset.text.trim();
+    let i = 0;
+    const speed = 18;
+    const tick = () => {
+      i++;
+      typeLine.textContent = txt.slice(0, i);
+      if (i < txt.length) setTimeout(tick, speed);
+    };
+    setTimeout(tick, 350);
+  }
 
-    .timeline{
-      margin-top: 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.16);
-      padding: 16px;
-    }
-    .step{
-      display:flex; gap:12px;
-      padding: 12px 0;
-      border-top: 1px solid rgba(255,255,255,.06);
-    }
-    .step:first-child{border-top:0}
-    .num{
-      width:34px; height:34px;
-      border-radius: 14px;
-      display:grid; place-items:center;
-      background: rgba(124,92,255,.16);
-      border: 1px solid rgba(124,92,255,.45);
-      font-weight: 850;
-    }
-    .step b{display:block; margin-bottom: 4px}
-    .step span{color: var(--muted); line-height:1.6}
+  // Counters
+  const counterSpans = $$("[data-count]");
+  if (counterSpans.length) {
+    const counterIO = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((ent) => {
+          if (!ent.isIntersecting) return;
+          const el = ent.target;
+          counterIO.unobserve(el);
+          const target = Number(el.getAttribute("data-count")) || 0;
+          const start = 0;
+          const dur = 950;
+          const t0 = performance.now();
+          const step = (t) => {
+            const p = Math.min(1, (t - t0) / dur);
+            const val = Math.floor(start + (target - start) * (1 - Math.pow(1 - p, 3)));
+            el.textContent = String(val);
+            if (p < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        });
+      },
+      { threshold: 0.35 }
+    );
+    counterSpans.forEach((s) => counterIO.observe(s));
+  }
 
-    footer{
-      margin-top: 22px;
-      padding-top: 18px;
-      border-top: 1px solid rgba(255,255,255,.06);
-      color: var(--muted);
-      font-size: 13px;
-      display:flex; gap:12px; flex-wrap:wrap;
-      justify-content:space-between; align-items:center;
-    }
-    .links{display:flex; gap:12px; flex-wrap:wrap}
-    .links a{color: var(--muted)}
-    .links a:hover{color: var(--text)}
-  </style>
-</head>
+  // Modals: Join + Play
+  const joinModal = $("#joinModal");
+  const playModal = $("#playModal");
+  const openModal = (m) => {
+    if (!m) return;
+    m.classList.add("isOpen");
+    m.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  };
+  const closeModal = (m) => {
+    if (!m) return;
+    m.classList.remove("isOpen");
+    m.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  };
 
-<body>
-  <div class="page">
-    <header class="topbar">
-      <div class="topbar-inner">
-        <a class="brand" href="index.html" aria-label="Mybookie Home">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <h1>Mybookie</h1>
-            <small>The e-Library</small>
-          </div>
-        </a>
+  const bindModal = (m, closeBtnSel) => {
+    if (!m) return;
+    const closeBtn = $(closeBtnSel);
+    if (closeBtn) closeBtn.addEventListener("click", () => closeModal(m));
+    m.addEventListener("click", (e) => {
+      const wantsClose = e.target && e.target.getAttribute && e.target.getAttribute("data-close") === "1";
+      if (wantsClose) closeModal(m);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && m.classList.contains("isOpen")) closeModal(m);
+    });
+  };
 
-        <nav class="nav" aria-label="Primary navigation">
-          <a class="pill" href="index.html">Library</a>
-          <a class="pill active" href="about.html">About</a>
-          <button class="cta" id="ctaBtn" type="button">Get Early Access</button>
-        </nav>
-      </div>
-    </header>
+  bindModal(joinModal, "#joinClose");
+  bindModal(playModal, "#playClose");
 
-    <main class="container">
-      <section class="hero">
-        <div class="kicker"><span class="dot" aria-hidden="true"></span> About Mybookie</div>
-        <h2>Mybookie is built for readers who want less noise — and more meaning.</h2>
-        <p>
-          Mybookie — The e-Library is an upcoming ebook solution designed around one simple idea:
-          <strong>discovery should be effortless, reading should feel calm, and your library should stay organized.</strong>
-          We’re building a modern platform where you can explore curated ebooks, save what matters, and keep your
-          reading journey consistent — without getting lost in clutter.
-        </p>
+  const joinButtons = [
+    "#btnJoinTop", "#btnJoinHero", "#btnJoinHow", "#btnJoinFooter", "#openJoinFooter",
+    "#btnJoinAboutTop", "#btnJoinAboutHero", "#btnJoinAboutBottom", "#btnJoinAboutFooter",
+    "#btnJoinDrawer", "#btnJoinAboutDrawer"
+  ];
+  joinButtons.forEach((sel) => {
+    const b = $(sel);
+    if (b) b.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeDrawer();
+      openModal(joinModal);
+      const name = $("#name");
+      if (name) setTimeout(() => name.focus(), 50);
+    });
+  });
 
-        <div style="margin-top:12px;">
-          <span class="pilltag"><i aria-hidden="true"></i>Fast search</span>
-          <span class="pilltag"><i aria-hidden="true"></i>Curated collections</span>
-          <span class="pilltag"><i aria-hidden="true"></i>Clean dark UI</span>
-          <span class="pilltag"><i aria-hidden="true"></i>Reading momentum</span>
-        </div>
-      </section>
+  const playButtons = ["#btnPlayTop", "#btnPlayHero", "#btnPlayCard", "#btnPlayHow", "#btnPlayFooter", "#btnPlayDrawer"];
+  playButtons.forEach((sel) => {
+    const b = $(sel);
+    if (b) b.addEventListener("click", () => {
+      closeDrawer();
+      openModal(playModal);
+      arena.reset(true);
+    });
+  });
 
-      <section class="grid" aria-label="What makes Mybookie different">
-        <div class="card">
-          <h3>1) Discovery that respects your time</h3>
-          <p>
-            Mybookie highlights what’s worth reading. Think: topic filters, intent-based browsing, and curated
-            shelves that cut through the noise.
-          </p>
-        </div>
-        <div class="card">
-          <h3>2) A library you can actually manage</h3>
-          <p>
-            Save books, build lists, and keep track of what you want to read next. No more “I’ll remember it later.”
-            Your library stays tidy.
-          </p>
-        </div>
-        <div class="card">
-          <h3>3) A dark experience that feels premium</h3>
-          <p>
-            A calm, dark gray theme with subtle motion. Smooth transitions, clean typography, and UI that stays out of
-            the way while you focus.
-          </p>
-        </div>
-        <div class="card">
-          <h3>4) Built to scale into a complete solution</h3>
-          <p>
-            Today: a polished library experience. Next: accounts, syncing, reading progress, recommendations, and more.
-            Mybookie is designed to grow.
-          </p>
-        </div>
-      </section>
+  // Join form (demo)
+  const joinForm = $("#joinForm");
+  if (joinForm) {
+    joinForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(joinForm);
+      const name = String(fd.get("name") || "Player").trim();
+      closeModal(joinModal);
+      toast(`Welcome, ${name}. Profile created (demo).`);
+      joinForm.reset();
+    });
+  }
 
-      <section class="timeline" aria-label="Roadmap">
-        <h3 style="margin:0 0 8px;">Roadmap (high-level)</h3>
-        <p style="margin:0 0 10px; color:var(--muted);">
-          A simple rollout plan to turn Mybookie into a full ebook solution.
-        </p>
+  // Library
+  const bookGrid = $("#bookGrid");
+  const filtersEl = $("#filters");
+  const searchInput = $("#searchInput");
 
-        <div class="step">
-          <div class="num">1</div>
-          <div>
-            <b>Launch the core library experience</b>
-            <span>Fast search, categories, curated shelves, preview, and clean UI foundations.</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="num">2</div>
-          <div>
-            <b>Accounts + saved library sync</b>
-            <span>Saved books across devices, lists, and a personal dashboard for reading intent.</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="num">3</div>
-          <div>
-            <b>Reading progress + smart recommendations</b>
-            <span>Continue reading, lightweight tracking, and suggestions based on your taste — not hype.</span>
-          </div>
-        </div>
-      </section>
+  const books = [
+    { id: 1, title: "Neon Heist", genre: "Thriller", level: "Rookie", mode: "Boss Fight", blurb: "A fast cyber-chase where each chapter unlocks a timed typing duel." },
+    { id: 2, title: "Midnight Pixels", genre: "Sci-Fi", level: "Rookie", mode: "Sprint", blurb: "Short scenes, high stakes—perfect for quick sessions and streaks." },
+    { id: 3, title: "The Quiet Dragon", genre: "Fantasy", level: "Bronze", mode: "Quest", blurb: "Read to collect lore, then type spells to open hidden paths." },
+    { id: 4, title: "Code & Coffee", genre: "Slice of Life", level: "Bronze", mode: "Calm", blurb: "A cozy story with optional practice challenges for accuracy lovers." },
+    { id: 5, title: "The Last Scoreboard", genre: "Mystery", level: "Silver", mode: "Arena", blurb: "Clues are earned by completing clean typing streaks under pressure." },
+    { id: 6, title: "Orbit of Letters", genre: "Poetry", level: "Rookie", mode: "Precision", blurb: "Slow down. Type beautifully. Accuracy gives the biggest XP." },
+    { id: 7, title: "Monsoon Runner", genre: "Adventure", level: "Bronze", mode: "Quest", blurb: "Progress through storms and checkpoints—like levels in a game." },
+    { id: 8, title: "The Gray Kingdom", genre: "Fantasy", level: "Silver", mode: "Boss Fight", blurb: "Longer chapters + tougher duels. The rewards feel earned." },
+    { id: 9, title: "Signal: Lost & Found", genre: "Sci-Fi", level: "Bronze", mode: "Sprint", blurb: "Each scene ends with a 30-second typing burst for bonus XP." }
+  ];
 
-      <footer>
-        <div>© <span id="year"></span> Mybookie — The e-Library</div>
-        <div class="links">
-          <a href="index.html">Library</a>
-          <a href="#" id="privacy">Privacy</a>
-          <a href="#" id="terms">Terms</a>
-          <a href="#" id="support">Support</a>
-        </div>
-      </footer>
-    </main>
-  </div>
+  const genres = ["All", ...Array.from(new Set(books.map(b => b.genre)))];
 
-  <script>
-    document.getElementById("year").textContent = String(new Date().getFullYear());
+  const state = {
+    genre: "All",
+    q: ""
+  };
 
-    function toast(msg){
-      const t = document.createElement("div");
-      t.style.position = "fixed";
-      t.style.right = "18px";
-      t.style.bottom = "18px";
-      t.style.padding = "12px 12px";
-      t.style.borderRadius = "16px";
-      t.style.border = "1px solid rgba(255,255,255,.12)";
-      t.style.background = "rgba(16,17,23,.82)";
-      t.style.backdropFilter = "blur(10px)";
-      t.style.boxShadow = "0 10px 28px rgba(0,0,0,.35)";
-      t.style.color = "var(--text)";
-      t.style.zIndex = "90";
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(()=>{ t.style.opacity="0"; t.style.transform="translateY(8px)"; t.style.transition="all .25s ease"; }, 1500);
-      setTimeout(()=>t.remove(), 1850);
-    }
+  const esc = (s) => String(s).replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  }[m]));
 
-    document.getElementById("ctaBtn").addEventListener("click", () => {
-      toast("Early access: connect this CTA to your waitlist form/newsletter.");
+  const renderFilters = () => {
+    if (!filtersEl) return;
+    filtersEl.innerHTML = genres.map(g => `
+      <button class="filterBtn ${g === state.genre ? "isActive" : ""}" data-genre="${esc(g)}" type="button">
+        ${esc(g)}
+      </button>
+    `).join("");
+    filtersEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-genre]");
+      if (!btn) return;
+      state.genre = btn.getAttribute("data-genre");
+      renderFilters();
+      renderBooks();
+    });
+  };
+
+  const bookCoverHue = (id) => {
+    // deterministic pseudo-style
+    const h = (id * 47) % 360;
+    return `radial-gradient(circle at 20% 30%, hsla(${h}, 90%, 70%, .22), transparent 55%),
+            radial-gradient(circle at 70% 70%, hsla(${(h + 140) % 360}, 90%, 65%, .18), transparent 55%),
+            linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.02))`;
+  };
+
+  const renderBooks = () => {
+    if (!bookGrid) return;
+
+    const q = state.q.trim().toLowerCase();
+    const list = books.filter(b => {
+      const matchGenre = state.genre === "All" ? true : b.genre === state.genre;
+      const hay = `${b.title} ${b.genre} ${b.level} ${b.mode} ${b.blurb}`.toLowerCase();
+      const matchQ = q ? hay.includes(q) : true;
+      return matchGenre && matchQ;
     });
 
-    document.getElementById("privacy").addEventListener("click", (e)=>{ e.preventDefault(); toast("Privacy (placeholder)"); });
-    document.getElementById("terms").addEventListener("click", (e)=>{ e.preventDefault(); toast("Terms (placeholder)"); });
-    document.getElementById("support").addEventListener("click", (e)=>{ e.preventDefault(); toast("Support (placeholder)"); });
-  </script>
-</body>
-</html>
+    if (!list.length) {
+      bookGrid.innerHTML = `
+        <div class="card reveal inView" style="grid-column: 1 / -1;">
+          <div class="bookTitle">No results</div>
+          <div class="bookMeta">Try a different keyword or switch the filter.</div>
+        </div>
+      `;
+      return;
+    }
+
+    bookGrid.innerHTML = list.map(b => `
+      <article class="card reveal inView" data-book="${b.id}">
+        <div class="cover" style="background: ${bookCoverHue(b.id)};"></div>
+
+        <div class="cardTop">
+          <div class="bookTitle">${esc(b.title)}</div>
+          <div class="chip">${esc(b.genre)}</div>
+        </div>
+
+        <div class="bookMeta">${esc(b.blurb)}</div>
+
+        <div class="badges">
+          <span class="badge level">Level: ${esc(b.level)}</span>
+          <span class="badge mode">Mode: ${esc(b.mode)}</span>
+        </div>
+
+        <div class="cardBtns">
+          <button class="btn btnGhost" data-action="read" type="button">Read</button>
+          <button class="btn btnPrimary" data-action="play" type="button">Play</button>
+        </div>
+      </article>
+    `).join("");
+  };
+
+  if (filtersEl) renderFilters();
+  if (bookGrid) renderBooks();
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      state.q = e.target.value || "";
+      renderBooks();
+    });
+  }
+
+  // Book interactions
+  if (bookGrid) {
+    bookGrid.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      const card = e.target.closest("[data-book]");
+      const id = Number(card?.getAttribute("data-book")) || 0;
+      const book = books.find(b => b.id === id);
+      const act = btn.getAttribute("data-action");
+
+      if (!book) return;
+
+      if (act === "read") {
+        toast(`Opening "${book.title}" (demo). Replace this with your reader screen.`);
+      }
+      if (act === "play") {
+        openModal(playModal);
+        arena.reset(true, book);
+      }
+    });
+  }
+
+  // Toast (lightweight)
+  let toastT = null;
+  const toast = (msg) => {
+    let el = $("#toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "toast";
+      el.style.position = "fixed";
+      el.style.left = "18px";
+      el.style.bottom = "18px";
+      el.style.zIndex = "120";
+      el.style.maxWidth = "min(560px, 92vw)";
+      el.style.padding = "12px 14px";
+      el.style.borderRadius = "16px";
+      el.style.border = "1px solid rgba(255,255,255,.12)";
+      el.style.background = "rgba(12,14,18,.92)";
+      el.style.backdropFilter = "blur(14px)";
+      el.style.boxShadow = "0 16px 45px rgba(0,0,0,.55)";
+      el.style.color = "rgba(255,255,255,.92)";
+      el.style.transform = "translateY(10px)";
+      el.style.opacity = "0";
+      el.style.transition = "opacity .22s ease, transform .22s ease";
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    clearTimeout(toastT);
+    requestAnimationFrame(() => {
+      el.style.opacity = "1";
+      el.style.transform = "translateY(0)";
+    });
+    toastT = setTimeout(() => {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(10px)";
+    }, 2600);
+  };
+
+  // Typing Arena
+  const arena = {
+    quoteEl: $("#arenaQuote"),
+    inputEl: $("#arenaInput"),
+    timerEl: $("#arenaTimer"),
+    xpEl: $("#arenaXP"),
+    levelEl: $("#arenaLevel"),
+    kpiWpm: $("#kpiWpm"),
+    kpiAcc: $("#kpiAcc"),
+    kpiStreak: $("#kpiStreak"),
+    btnNew: $("#arenaNew"),
+    btnStart: $("#arenaStart"),
+    btnJoin: $("#arenaJoin"),
+
+    quotes: [
+      "Discipline is easiest when it feels like play.",
+      "Small sessions build big skills—one clean streak at a time.",
+      "Read the story. Type the moment. Level up your focus.",
+      "Speed without accuracy is noise. Accuracy becomes power.",
+      "Today’s progress is tomorrow’s confidence."
+    ],
+
+    state: {
+      running: false,
+      t: 30,
+      startTime: 0,
+      streak: 0,
+      xp: 0,
+      text: "",
+      bookHint: ""
+    },
+
+    pickQuote(book) {
+      const base = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+      if (book?.title) return `“${base}” — ${book.title}`;
+      return `“${base}”`;
+    },
+
+    setQuote(text) {
+      this.state.text = text;
+      this.renderQuote("");
+    },
+
+    renderQuote(typed) {
+      if (!this.quoteEl) return;
+      const target = this.state.text || "";
+      const t = typed || "";
+      let good = "";
+      let bad = "";
+      let rest = "";
+
+      for (let i = 0; i < target.length; i++) {
+        const c = target[i];
+        const tc = t[i];
+        if (tc == null) { rest = target.slice(i); break; }
+        if (tc === c && bad.length === 0) good += c;
+        else bad += c; // once wrong starts, mark remaining as bad until correction
+      }
+
+      // If user typed longer, consider extra as bad contextually
+      const extra = t.length > target.length ? t.slice(target.length) : "";
+
+      this.quoteEl.innerHTML = `
+        <span class="good">${esc(good)}</span><span class="bad">${esc(bad)}</span><span class="rest">${esc(rest)}</span>
+        ${extra ? `<span class="bad">${esc(extra)}</span>` : ""}
+      `;
+    },
+
+    computeStats(typed) {
+      const target = this.state.text;
+      const typedLen = typed.length;
+      const minLen = Math.min(target.length, typedLen);
+
+      let correct = 0;
+      for (let i = 0; i < minLen; i++) if (typed[i] === target[i]) correct++;
+
+      const acc = typedLen === 0 ? 0 : Math.max(0, Math.round((correct / typedLen) * 100));
+      const elapsedMin = Math.max(0.001, (performance.now() - this.state.startTime) / 60000);
+      const words = typedLen / 5;
+      const wpm = Math.max(0, Math.round(words / elapsedMin));
+
+      return { acc, wpm, correct };
+    },
+
+    setUI() {
+      if (this.timerEl) this.timerEl.textContent = `Time: ${this.state.t}s`;
+      if (this.xpEl) this.xpEl.textContent = `XP: ${this.state.xp}`;
+      if (this.levelEl) {
+        const lvl = this.state.streak >= 5 ? "Elite" : this.state.streak >= 3 ? "Pro" : this.state.streak >= 1 ? "Rookie+" : "Rookie";
+        this.levelEl.textContent = `Level: ${lvl}`;
+      }
+      if (this.kpiStreak) this.kpiStreak.textContent = String(this.state.streak);
+    },
+
+    reset(focus = false, book = null) {
+      this.stop();
+      this.state.t = 30;
+      this.state.running = false;
+      this.state.startTime = 0;
+      this.state.text = this.pickQuote(book);
+      this.state.bookHint = book?.title ? book.title : "";
+      if (this.inputEl) this.inputEl.value = "";
+      if (this.kpiWpm) this.kpiWpm.textContent = "0";
+      if (this.kpiAcc) this.kpiAcc.textContent = "0%";
+      this.setQuote(this.state.text);
+      this.setUI();
+      if (this.btnStart) this.btnStart.textContent = "Start match";
+      if (focus && this.inputEl) setTimeout(() => this.inputEl.focus(), 50);
+    },
+
+    start() {
+      if (!this.inputEl) return;
+      if (this.state.running) return;
+
+      this.state.running = true;
+      this.state.t = 30;
+      this.state.startTime = performance.now();
+      this.inputEl.disabled = false;
+      this.inputEl.focus();
+      if (this.btnStart) this.btnStart.textContent = "Running…";
+
+      const tick = () => {
+        if (!this.state.running) return;
+        this.state.t -= 1;
+        this.setUI();
+        if (this.state.t <= 0) {
+          this.finish();
+          return;
+        }
+        setTimeout(tick, 1000);
+      };
+      setTimeout(tick, 1000);
+    },
+
+    stop() {
+      this.state.running = false;
+      if (this.btnStart) this.btnStart.textContent = "Start match";
+    },
+
+    finish() {
+      this.state.running = false;
+      if (!this.inputEl) return;
+
+      const typed = this.inputEl.value || "";
+      const { acc, wpm } = this.computeStats(typed);
+      const complete = typed === this.state.text;
+
+      // XP logic (simple + satisfying)
+      const xpGain = Math.round((acc * 0.6) + Math.min(120, wpm) * 0.4);
+      const bonus = complete ? 40 : 0;
+      const total = Math.max(0, xpGain + bonus);
+
+      this.state.xp += total;
+
+      if (complete && acc >= 95) this.state.streak += 1;
+      else this.state.streak = Math.max(0, this.state.streak - 1);
+
+      this.setUI();
+      if (this.btnStart) this.btnStart.textContent = "Start match";
+      toast(`Match ended: ${wpm} WPM • ${acc}% • +${total} XP${complete ? " (clear!)" : ""}`);
+    }
+  };
+
+  if (arena.btnNew) arena.btnNew.addEventListener("click", () => arena.reset(true));
+  if (arena.btnStart) arena.btnStart.addEventListener("click", () => arena.start());
+  if (arena.btnJoin) arena.btnJoin.addEventListener("click", () => openModal(joinModal));
+
+  if (arena.inputEl) {
+    arena.inputEl.addEventListener("input", () => {
+      const typed = arena.inputEl.value || "";
+      arena.renderQuote(typed);
+
+      if (!arena.state.running) return;
+
+      const { acc, wpm } = arena.computeStats(typed);
+      if (arena.kpiWpm) arena.kpiWpm.textContent = String(wpm);
+      if (arena.kpiAcc) arena.kpiAcc.textContent = `${acc}%`;
+
+      // Auto-finish if exact match
+      if (typed === arena.state.text) arena.finish();
+    });
+  }
+
+  // Ensure input disabled when modal closed (nice UX)
+  const playClose = $("#playClose");
+  if (playClose) playClose.addEventListener("click", () => arena.stop());
+
+})();
