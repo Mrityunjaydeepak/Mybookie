@@ -4,398 +4,874 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mybookie — The e-Library</title>
-  <meta name="description" content="Mybookie is the dark-mode e-Library where reading meets online gaming. Read stories, type challenges, earn XP, climb leaderboards." />
-  <meta name="theme-color" content="#0f1115" />
+  <meta name="description" content="Mybookie is the dark-mode e-Library where reading meets online gaming through typing challenges, XP and progress." />
+  <meta name="theme-color" content="#0b0f14" />
 
-  <link rel="stylesheet" href="./styles.css" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    // Tailwind config (in-page) to keep it dark-gray + premium.
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: {
+              950: "#070a0f",
+              900: "#0b0f14",
+              850: "#0f141b",
+              800: "#121924",
+              750: "#161f2c",
+              700: "#1b2636",
+            },
+          },
+          boxShadow: {
+            soft: "0 18px 50px rgba(0,0,0,.45)",
+            glow: "0 0 0 1px rgba(255,255,255,.06), 0 20px 60px rgba(0,0,0,.55)"
+          },
+          keyframes: {
+            floaty: { "0%,100%": { transform: "translateY(0px)" }, "50%": { transform: "translateY(-6px)" } },
+            shimmer: { "0%": { transform: "translateX(-40%)" }, "100%": { transform: "translateX(140%)" } },
+            fadeUp: { "0%": { opacity: 0, transform: "translateY(14px)" }, "100%": { opacity: 1, transform: "translateY(0)" } },
+          },
+          animation: {
+            floaty: "floaty 7s ease-in-out infinite",
+            shimmer: "shimmer 2.2s ease-in-out infinite",
+            fadeUp: "fadeUp .65s cubic-bezier(.2,.8,.2,1) both",
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Small helpers not worth separate file */
+    .glass { backdrop-filter: blur(14px); }
+    .no-scrollbar::-webkit-scrollbar{ display:none; }
+    .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+  </style>
 </head>
 
-<body>
-  <!-- Ambient layers -->
-  <div class="bg-grid" aria-hidden="true"></div>
-  <div class="bg-glow" aria-hidden="true"></div>
-  <div class="bg-noise" aria-hidden="true"></div>
+<body class="min-h-screen bg-gradient-to-b from-ink-950 via-ink-900 to-ink-950 text-white selection:bg-white/10 selection:text-white">
 
-  <!-- Top bar -->
-  <header class="topbar" id="topbar">
-    <a class="brand" href="./index.html" aria-label="Mybookie Home">
-      <span class="brandMark" aria-hidden="true"></span>
-      <span class="brandText">
-        <span class="brandName">Mybookie</span>
-        <span class="brandTag">the e-library</span>
-      </span>
-    </a>
+  <!-- Background accents (subtle) -->
+  <div class="pointer-events-none fixed inset-0">
+    <div class="absolute -top-40 left-[-10%] h-[520px] w-[520px] rounded-full bg-white/5 blur-3xl"></div>
+    <div class="absolute top-20 right-[-15%] h-[520px] w-[520px] rounded-full bg-white/5 blur-3xl"></div>
+    <div class="absolute inset-0 opacity-[0.08]" style="background-image:
+      linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+      background-size: 64px 64px;"></div>
+  </div>
 
-    <nav class="nav">
-      <a href="#home" class="navLink">Home</a>
-      <a href="#library" class="navLink">Library</a>
-      <a href="#how" class="navLink">How it works</a>
-      <a href="./about.html" class="navLink">About</a>
-      <button class="btn btnGhost" id="btnPlayTop" type="button">Play now</button>
-      <button class="btn btnPrimary" id="btnJoinTop" type="button">Join now</button>
-    </nav>
+  <!-- Topbar -->
+  <header class="sticky top-0 z-50 border-b border-white/5 bg-ink-900/75 glass">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <a href="#home" class="group flex items-center gap-3">
+        <span class="relative grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5 shadow-soft">
+          <span class="absolute inset-0 overflow-hidden rounded-2xl">
+            <span class="absolute -left-1/2 top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 animate-shimmer"></span>
+          </span>
+          <span class="relative text-sm font-extrabold tracking-wide">MB</span>
+        </span>
+        <span class="flex flex-col leading-tight">
+          <span class="text-sm font-extrabold tracking-wide">Mybookie</span>
+          <span class="text-xs text-white/60">the e-library</span>
+        </span>
+      </a>
 
-    <button class="hamburger" id="hamburger" type="button" aria-label="Open menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
+      <nav class="hidden items-center gap-2 md:flex">
+        <a class="rounded-xl px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition" href="#library">Library</a>
+        <a class="rounded-xl px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition" href="#how">How it works</a>
+        <a class="rounded-xl px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition" href="#about">About</a>
+        <button id="btnPlayTop" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold hover:bg-white/8 transition">
+          Play now
+        </button>
+        <button id="btnJoinTop" class="rounded-xl bg-white text-ink-950 px-4 py-2 text-sm font-extrabold hover:opacity-90 transition">
+          Join now
+        </button>
+      </nav>
+
+      <button id="mobileBtn" class="md:hidden rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/8 transition">
+        Menu
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden border-t border-white/5 bg-ink-900/85 glass">
+      <div class="mx-auto max-w-6xl px-4 py-3 grid gap-2">
+        <a class="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition" href="#library">Library</a>
+        <a class="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition" href="#how">How it works</a>
+        <a class="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition" href="#about">About</a>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button id="btnPlayMobile" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold hover:bg-white/8 transition">Play now</button>
+          <button id="btnJoinMobile" class="rounded-xl bg-white text-ink-950 px-4 py-2 text-sm font-extrabold hover:opacity-90 transition">Join now</button>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <!-- Mobile menu -->
-  <aside class="drawer" id="drawer" aria-hidden="true">
-    <div class="drawerHeader">
-      <div class="drawerTitle">Menu</div>
-      <button class="iconBtn" id="drawerClose" type="button" aria-label="Close menu">✕</button>
-    </div>
-    <div class="drawerLinks">
-      <a href="#home" class="drawerLink">Home</a>
-      <a href="#library" class="drawerLink">Library</a>
-      <a href="#how" class="drawerLink">How it works</a>
-      <a href="./about.html" class="drawerLink">About</a>
-    </div>
-    <div class="drawerCtas">
-      <button class="btn btnGhost w100" id="btnPlayDrawer" type="button">Play now</button>
-      <button class="btn btnPrimary w100" id="btnJoinDrawer" type="button">Join now</button>
-    </div>
-  </aside>
-
   <!-- Hero -->
-  <main id="home" class="section hero">
-    <div class="container heroGrid">
-      <div class="heroLeft reveal">
-        <div class="pill">
-          <span class="dot"></span>
-          Reading × Typing × Online Gaming
+  <main id="home" class="relative">
+    <section class="mx-auto max-w-6xl px-4 pt-14 pb-12 md:pt-20">
+      <div class="grid items-center gap-10 md:grid-cols-2">
+        <!-- Left -->
+        <div class="reveal">
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
+            <span class="h-2 w-2 rounded-full bg-white/70"></span>
+            Reading × Typing × Online Gaming
+          </div>
+
+          <h1 class="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
+            Mybookie is the e-Library
+            <span class="block text-white/70">where books become levels.</span>
+          </h1>
+
+          <p class="mt-4 text-base leading-relaxed text-white/70">
+            The upcoming best e-books solution based on online gaming with reading and typing.
+            Read short chapters, practice typing challenges, earn XP, and build a habit that actually sticks.
+          </p>
+
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button id="btnJoinHero" class="rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">
+              Join now and start your journey
+            </button>
+            <button id="btnPlayHero" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/8 transition">
+              Play now (Typing Arena)
+            </button>
+          </div>
+
+          <div class="mt-8 grid grid-cols-3 gap-3">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div class="text-lg font-extrabold"><span data-count="120">0</span>+</div>
+              <div class="text-xs text-white/60 mt-1">Curated books</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div class="text-lg font-extrabold"><span data-count="9">0</span> modes</div>
+              <div class="text-xs text-white/60 mt-1">Quests & typing</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div class="text-lg font-extrabold"><span data-count="24">0</span>/7</div>
+              <div class="text-xs text-white/60 mt-1">Always-on play</div>
+            </div>
+          </div>
         </div>
 
-        <h1 class="h1">
-          Welcome to <span class="accent">Mybookie</span>
-          <br />
-          <span class="subhead" id="typeLine" data-text="An e-Library where stories become levels, and typing becomes your power."></span>
-        </h1>
+        <!-- Right -->
+        <div class="reveal">
+          <div class="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/8 to-white/4 p-6 shadow-glow">
+            <div class="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.10),transparent_45%)]"></div>
 
-        <p class="lead">
-          Mybookie is the upcoming best e-books solution built like a game:
-          read chapters, complete typing challenges, earn XP, unlock rewards, and climb the leaderboard.
+            <div class="relative">
+              <div class="flex items-center justify-between gap-3">
+                <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
+                  <span class="h-2 w-2 rounded-full bg-white/70"></span>
+                  Live demo: Typing Arena
+                </div>
+                <div class="text-xs text-white/55">Accuracy • Speed • Focus</div>
+              </div>
+
+              <div class="mt-5 rounded-2xl border border-white/10 bg-ink-850/60 p-5">
+                <div class="text-lg font-extrabold">Your next level starts here</div>
+                <p class="mt-2 text-sm leading-relaxed text-white/65">
+                  In Mybookie, reading unlocks challenges. Challenges unlock rewards.
+                  You keep progressing—without feeling forced.
+                </p>
+
+                <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                  <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">XP + rewards</span>
+                  <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Daily streaks</span>
+                  <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Skill stats</span>
+                </div>
+
+                <button id="btnPlayCard" class="mt-5 w-full rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">
+                  Start a quick match
+                </button>
+              </div>
+
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div class="text-sm font-bold">Read Mode</div>
+                  <div class="mt-1 text-xs text-white/60">Calm experience, highlights, bookmarks.</div>
+                </div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div class="text-sm font-bold">Play Mode</div>
+                  <div class="mt-1 text-xs text-white/60">Timed typing, streaks, XP boosts.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-xs text-white/55">
+            This is a front-end demo. You can connect real auth, payments, and catalog later.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library -->
+    <section id="library" class="mx-auto max-w-6xl px-4 py-12">
+      <div class="reveal">
+        <h2 class="text-2xl font-extrabold tracking-tight">Library</h2>
+        <p class="mt-2 text-sm text-white/70">
+          Pick a title. Then choose: <span class="font-semibold text-white/80">Read</span> (chill) or
+          <span class="font-semibold text-white/80">Play</span> (typing challenge).
         </p>
 
-        <div class="heroCtas">
-          <button class="btn btnPrimary" id="btnJoinHero" type="button">
-            Join now
-            <span class="btnSpark" aria-hidden="true"></span>
-          </button>
-
-          <button class="btn btnGhost" id="btnPlayHero" type="button">
-            Play & practice
-          </button>
+        <div class="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <span class="text-white/60">⌕</span>
+              <input id="searchInput" class="w-full bg-transparent text-sm text-white/85 outline-none placeholder:text-white/35" placeholder="Search books, genres, tags…" />
+            </div>
+          </div>
+          <div id="filters" class="flex flex-wrap gap-2"></div>
         </div>
 
-        <div class="heroStats">
-          <div class="statCard">
-            <div class="statValue"><span data-count="120">0</span>+</div>
-            <div class="statLabel">Curated books</div>
+        <div id="bookGrid" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how" class="mx-auto max-w-6xl px-4 py-12">
+      <div class="reveal">
+        <h2 class="text-2xl font-extrabold tracking-tight">How it works</h2>
+        <p class="mt-2 text-sm text-white/70">
+          A simple loop designed to keep you consistent: read → challenge → reward → repeat.
+        </p>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-4">
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="text-xs text-white/55 font-bold">01</div>
+            <div class="mt-2 font-extrabold">Choose a story</div>
+            <p class="mt-2 text-sm text-white/65">Books are worlds. Chapters are levels. Progress is tracked.</p>
           </div>
-          <div class="statCard">
-            <div class="statValue"><span data-count="9">0</span> modes</div>
-            <div class="statLabel">Typing & reading quests</div>
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="text-xs text-white/55 font-bold">02</div>
+            <div class="mt-2 font-extrabold">Read to unlock</div>
+            <p class="mt-2 text-sm text-white/65">Finish sections to unlock challenges and rewards.</p>
           </div>
-          <div class="statCard">
-            <div class="statValue"><span data-count="24">0</span>/7</div>
-            <div class="statLabel">Always-on play</div>
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="text-xs text-white/55 font-bold">03</div>
+            <div class="mt-2 font-extrabold">Type to win</div>
+            <p class="mt-2 text-sm text-white/65">Speed + accuracy = XP. XP = ranks + unlocks.</p>
+          </div>
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="text-xs text-white/55 font-bold">04</div>
+            <div class="mt-2 font-extrabold">Rank up</div>
+            <p class="mt-2 text-sm text-white/65">Streaks and stats keep you coming back.</p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col items-start justify-between gap-4 rounded-3xl border border-white/10 bg-gradient-to-b from-white/8 to-white/4 p-6 md:flex-row md:items-center">
+          <div>
+            <div class="text-lg font-extrabold">Join now and start your journey</div>
+            <div class="mt-1 text-sm text-white/70">Build a reading habit without boredom—turn it into a game.</div>
+          </div>
+          <div class="flex gap-3">
+            <button id="btnPlayHow" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/8 transition">Play now</button>
+            <button id="btnJoinHow" class="rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">Join now</button>
           </div>
         </div>
       </div>
+    </section>
 
-      <div class="heroRight reveal">
-        <div class="heroOrb">
-          <div class="orbRing"></div>
-          <div class="orbRing ring2"></div>
-          <div class="orbRing ring3"></div>
+    <!-- About -->
+    <section id="about" class="mx-auto max-w-6xl px-4 py-12">
+      <div class="reveal grid gap-6 md:grid-cols-2">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 class="text-2xl font-extrabold tracking-tight">About Mybookie</h2>
+          <p class="mt-3 text-sm leading-relaxed text-white/70">
+            Mybookie is a new kind of e-library: not just a place to “access” books, but a place to
+            <span class="font-semibold text-white/80">progress</span>.
+            We combine reading with online gaming elements—typing practice, streaks, XP, and challenges—so learning feels satisfying.
+          </p>
+          <p class="mt-3 text-sm leading-relaxed text-white/70">
+            The goal is simple: help you read more, type better, and stay focused—by making the journey fun.
+            Whether you want calm reading or competitive practice, Mybookie gives you both.
+          </p>
 
-          <div class="orbCard">
-            <div class="orbTop">
-              <div class="orbBadge">Live Challenge</div>
-              <div class="orbMini">Accuracy • Speed • Focus</div>
-            </div>
-            <div class="orbBig">
-              <div class="orbTitle">Typing Arena</div>
-              <div class="orbText">Beat the clock. Earn XP. Unlock chapters.</div>
-            </div>
+          <div class="mt-5 flex flex-wrap gap-2 text-xs">
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Habit-building</span>
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Skill growth</span>
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Rewards & ranks</span>
+          </div>
 
-            <div class="orbMeta">
-              <div class="chip">XP +50</div>
-              <div class="chip">Streak bonus</div>
-              <div class="chip">Rank up</div>
-            </div>
+          <div class="mt-6 flex gap-3">
+            <button id="btnJoinAbout" class="rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">Join now</button>
+            <button id="btnPlayAbout" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/8 transition">Play now</button>
+          </div>
+        </div>
 
-            <button class="btn btnPrimary w100" id="btnPlayCard" type="button">Start a quick match</button>
+        <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-white/8 to-white/4 p-6 shadow-soft">
+          <div class="text-sm font-extrabold">What you get (preview)</div>
+          <ul class="mt-4 space-y-3 text-sm text-white/70">
+            <li class="flex gap-3">
+              <span class="mt-1 h-2 w-2 rounded-full bg-white/70"></span>
+              Curated shelves and fast search across genres and levels.
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-1 h-2 w-2 rounded-full bg-white/70"></span>
+              Typing Arena: practice with short quotes and earn XP.
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-1 h-2 w-2 rounded-full bg-white/70"></span>
+              Streak bonuses to keep you consistent without pressure.
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-1 h-2 w-2 rounded-full bg-white/70"></span>
+              Progress unlocks: chapters, rewards, and skill stats.
+            </li>
+          </ul>
+
+          <div class="mt-6 rounded-2xl border border-white/10 bg-ink-850/60 p-5 animate-floaty">
+            <div class="text-sm font-extrabold">Micro-promise</div>
+            <p class="mt-2 text-sm text-white/65 leading-relaxed">
+              “If you can play for 10 minutes, you can read for 10 minutes.”
+              Mybookie turns that into progress you can see.
+            </p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-ink-900/60 glass">
+      <div class="mx-auto max-w-6xl px-4 py-10">
+        <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div class="flex items-center gap-3">
+              <div class="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5 font-extrabold">MB</div>
+              <div>
+                <div class="font-extrabold">Mybookie</div>
+                <div class="text-xs text-white/60">Read. Type. Level up.</div>
+              </div>
+            </div>
+            <div class="mt-4 text-xs text-white/50">© <span id="year"></span> Mybookie. All rights reserved.</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-sm text-white/70 md:grid-cols-3">
+            <a class="hover:text-white transition" href="#library">Library</a>
+            <a class="hover:text-white transition" href="#how">How it works</a>
+            <a class="hover:text-white transition" href="#about">About</a>
+          </div>
+
+          <div class="flex gap-3">
+            <button id="btnPlayFooter" class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/8 transition">Play now</button>
+            <button id="btnJoinFooter" class="rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">Join now</button>
+          </div>
+        </div>
+      </div>
+    </footer>
   </main>
 
-  <!-- Library -->
-  <section id="library" class="section">
-    <div class="container">
-      <div class="sectionHead reveal">
-        <h2 class="h2">Library</h2>
-        <p class="muted">
-          Pick a title. Then choose: <strong>Read</strong> (chill) or <strong>Play</strong> (typing challenge).
-          This demo uses sample books—swap with your real catalog anytime.
-        </p>
-      </div>
-
-      <div class="libraryTools reveal">
-        <div class="search">
-          <span class="searchIcon" aria-hidden="true">⌕</span>
-          <input id="searchInput" type="search" placeholder="Search books, genres, tags…" aria-label="Search books" />
-        </div>
-
-        <div class="filters" id="filters" aria-label="Genre filters"></div>
-      </div>
-
-      <div class="cardsGrid" id="bookGrid" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <!-- How it works -->
-  <section id="how" class="section">
-    <div class="container">
-      <div class="sectionHead reveal">
-        <h2 class="h2">How it works</h2>
-        <p class="muted">Mybookie blends e-books with game loops—simple, addictive, and skill-building.</p>
-      </div>
-
-      <div class="steps">
-        <article class="stepCard reveal">
-          <div class="stepNum">01</div>
-          <h3 class="h3">Choose your story</h3>
-          <p class="muted">Browse genres, levels, and challenges. Every book is a “world” with quests.</p>
-        </article>
-
-        <article class="stepCard reveal">
-          <div class="stepNum">02</div>
-          <h3 class="h3">Read to unlock</h3>
-          <p class="muted">Finish chapters, collect highlights, and unlock new scenes like levels.</p>
-        </article>
-
-        <article class="stepCard reveal">
-          <div class="stepNum">03</div>
-          <h3 class="h3">Type to win</h3>
-          <p class="muted">Fight bosses via typing duels—accuracy + speed = XP + rewards.</p>
-        </article>
-
-        <article class="stepCard reveal">
-          <div class="stepNum">04</div>
-          <h3 class="h3">Rank up</h3>
-          <p class="muted">Streaks, badges, seasonal leaderboards, and skill stats keep you moving.</p>
-        </article>
-      </div>
-
-      <div class="ctaBanner reveal">
-        <div>
-          <h3 class="h3">Join now and start your journey</h3>
-          <p class="muted">Build a reading habit without boredom—turn it into a game you actually want to play.</p>
-        </div>
-        <div class="ctaRow">
-          <button class="btn btnGhost" id="btnPlayHow" type="button">Play now</button>
-          <button class="btn btnPrimary" id="btnJoinHow" type="button">Join now</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials -->
-  <section class="section">
-    <div class="container">
-      <div class="sectionHead reveal">
-        <h2 class="h2">Why people stick with it</h2>
-        <p class="muted">Designed for attention spans that love games—but still want growth.</p>
-      </div>
-
-      <div class="quotes">
-        <figure class="quoteCard reveal">
-          <blockquote>“Finally, a library that doesn’t feel like homework. The XP loop is dangerously motivating.”</blockquote>
-          <figcaption>— Early tester</figcaption>
-        </figure>
-        <figure class="quoteCard reveal">
-          <blockquote>“I came for typing speed, stayed for the stories. It’s like reading with a heartbeat.”</blockquote>
-          <figcaption>— Student</figcaption>
-        </figure>
-        <figure class="quoteCard reveal">
-          <blockquote>“Leaderboards made me consistent. Consistency made me better. Simple.”</blockquote>
-          <figcaption>— Creator</figcaption>
-        </figure>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="section">
-    <div class="container">
-      <div class="sectionHead reveal">
-        <h2 class="h2">FAQ</h2>
-        <p class="muted">Quick answers for the Mybookie concept.</p>
-      </div>
-
-      <div class="faq">
-        <details class="faqItem reveal">
-          <summary>Is Mybookie only for gamers?</summary>
-          <p class="muted">No. It’s for anyone who wants reading to feel effortless. Gaming elements are optional—but motivating.</p>
-        </details>
-        <details class="faqItem reveal">
-          <summary>What do I gain from typing challenges?</summary>
-          <p class="muted">Speed, accuracy, focus, and a measurable skill curve—plus XP and progression to keep you consistent.</p>
-        </details>
-        <details class="faqItem reveal">
-          <summary>Can I just read without playing?</summary>
-          <p class="muted">Yes. “Read Mode” is calm. “Play Mode” is competitive. Switch anytime.</p>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container footerGrid">
-      <div>
-        <div class="footerBrand">
-          <span class="brandMark" aria-hidden="true"></span>
-          <div>
-            <div class="footerName">Mybookie</div>
-            <div class="muted">The e-Library built like a game.</div>
-          </div>
-        </div>
-        <div class="muted footerSmall">© <span id="year"></span> Mybookie. All rights reserved.</div>
-      </div>
-
-      <div class="footerLinks">
-        <a href="./about.html">About</a>
-        <a href="#library">Library</a>
-        <a href="#how">How it works</a>
-        <a href="#" id="openJoinFooter">Join</a>
-      </div>
-
-      <div class="footerCta">
-        <button class="btn btnGhost" id="btnPlayFooter" type="button">Play now</button>
-        <button class="btn btnPrimary" id="btnJoinFooter" type="button">Join now</button>
-      </div>
-    </div>
-  </footer>
-
   <!-- Join Modal -->
-  <div class="modal" id="joinModal" aria-hidden="true" role="dialog" aria-label="Join Mybookie">
-    <div class="modalBackdrop" data-close="1"></div>
-    <div class="modalCard" role="document">
-      <div class="modalHead">
+  <div id="joinModal" class="fixed inset-0 z-[60] hidden">
+    <div data-close="join" class="absolute inset-0 bg-black/60"></div>
+    <div class="relative mx-auto mt-[10vh] w-[92vw] max-w-lg rounded-3xl border border-white/10 bg-ink-850/90 glass shadow-glow">
+      <div class="flex items-start justify-between gap-4 border-b border-white/5 p-5">
         <div>
-          <div class="modalTitle">Join Mybookie</div>
-          <div class="muted">Start your journey: read, play, level up.</div>
+          <div class="text-lg font-extrabold">Join Mybookie</div>
+          <div class="mt-1 text-sm text-white/65">Start your journey: read, play, level up.</div>
         </div>
-        <button class="iconBtn" id="joinClose" type="button" aria-label="Close">✕</button>
+        <button data-close="join" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/8 transition">✕</button>
       </div>
 
-      <form class="form" id="joinForm">
-        <div class="formRow">
-          <label class="label" for="name">Name</label>
-          <input class="input" id="name" name="name" placeholder="Your name" required />
+      <form id="joinForm" class="p-5 space-y-4">
+        <div>
+          <label class="text-xs text-white/60">Name</label>
+          <input required name="name" class="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/35 focus:border-white/20"
+                 placeholder="Your name" />
         </div>
-        <div class="formRow">
-          <label class="label" for="email">Email</label>
-          <input class="input" id="email" name="email" type="email" placeholder="you@example.com" required />
+        <div>
+          <label class="text-xs text-white/60">Email</label>
+          <input required type="email" name="email" class="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/35 focus:border-white/20"
+                 placeholder="you@example.com" />
         </div>
-        <div class="formRow">
-          <label class="label" for="goal">Your goal</label>
-          <select class="input" id="goal" name="goal">
+        <div>
+          <label class="text-xs text-white/60">Your goal</label>
+          <select name="goal" class="mt-2 w-full rounded-2xl border border-white/10 bg-ink-800 px-4 py-3 text-sm outline-none focus:border-white/20">
             <option>Build a reading habit</option>
             <option>Improve typing speed</option>
             <option>Both: read + play</option>
           </select>
         </div>
 
-        <button class="btn btnPrimary w100" type="submit">Create free profile</button>
-        <div class="muted small">
-          Demo note: this form doesn’t send data anywhere yet—connect your backend later.
+        <button class="w-full rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition" type="submit">
+          Create free profile
+        </button>
+
+        <div class="text-xs text-white/50">
+          Demo note: this doesn’t submit anywhere yet. Connect your backend later.
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Play Modal (Typing Arena) -->
-  <div class="modal" id="playModal" aria-hidden="true" role="dialog" aria-label="Typing Arena">
-    <div class="modalBackdrop" data-close="1"></div>
-    <div class="modalCard modalWide" role="document">
-      <div class="modalHead">
+  <!-- Play Modal -->
+  <div id="playModal" class="fixed inset-0 z-[60] hidden">
+    <div data-close="play" class="absolute inset-0 bg-black/60"></div>
+    <div class="relative mx-auto mt-[8vh] w-[94vw] max-w-4xl rounded-3xl border border-white/10 bg-ink-850/90 glass shadow-glow">
+      <div class="flex items-start justify-between gap-4 border-b border-white/5 p-5">
         <div>
-          <div class="modalTitle">Typing Arena</div>
-          <div class="muted">Type the quote. Beat the clock. Earn XP.</div>
+          <div class="text-lg font-extrabold">Typing Arena</div>
+          <div class="mt-1 text-sm text-white/65">Type the quote. Beat the clock. Earn XP.</div>
         </div>
-        <button class="iconBtn" id="playClose" type="button" aria-label="Close">✕</button>
+        <button data-close="play" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold hover:bg-white/8 transition">✕</button>
       </div>
 
-      <div class="arena">
-        <div class="arenaLeft">
-          <div class="arenaBox">
-            <div class="arenaTop">
-              <div class="chip" id="arenaLevel">Level: Rookie</div>
-              <div class="chip" id="arenaTimer">Time: 30s</div>
-              <div class="chip" id="arenaXP">XP: 0</div>
+      <div class="grid gap-4 p-5 md:grid-cols-[1.2fr_.8fr]">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span id="arenaLevel" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">Level: Rookie</span>
+            <span id="arenaTimer" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">Time: 30s</span>
+            <span id="arenaXP" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">XP: 0</span>
+          </div>
+
+          <div id="arenaQuote" class="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-relaxed"></div>
+
+          <textarea id="arenaInput" rows="4"
+            class="mt-3 w-full rounded-2xl border border-white/10 bg-black/25 p-4 text-sm outline-none placeholder:text-white/35 focus:border-white/20"
+            placeholder="Start typing here…"></textarea>
+
+          <div class="mt-4 grid grid-cols-3 gap-3">
+            <div class="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div id="kpiWpm" class="text-lg font-extrabold">0</div>
+              <div class="mt-1 text-xs text-white/55">WPM</div>
             </div>
-
-            <div class="quote" id="arenaQuote" aria-label="Quote to type"></div>
-
-            <textarea class="arenaInput" id="arenaInput" rows="4" placeholder="Start typing here…"></textarea>
-
-            <div class="arenaStats">
-              <div class="kpi">
-                <div class="kpiVal" id="kpiWpm">0</div>
-                <div class="kpiLab">WPM</div>
-              </div>
-              <div class="kpi">
-                <div class="kpiVal" id="kpiAcc">0%</div>
-                <div class="kpiLab">Accuracy</div>
-              </div>
-              <div class="kpi">
-                <div class="kpiVal" id="kpiStreak">0</div>
-                <div class="kpiLab">Streak</div>
-              </div>
+            <div class="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div id="kpiAcc" class="text-lg font-extrabold">0%</div>
+              <div class="mt-1 text-xs text-white/55">Accuracy</div>
             </div>
-
-            <div class="arenaBtns">
-              <button class="btn btnGhost" id="arenaNew" type="button">New quote</button>
-              <button class="btn btnPrimary" id="arenaStart" type="button">Start match</button>
-            </div>
-
-            <div class="muted small" id="arenaHint">
-              Tip: accuracy matters more than speed. Clean typing = bigger XP.
+            <div class="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div id="kpiStreak" class="text-lg font-extrabold">0</div>
+              <div class="mt-1 text-xs text-white/55">Streak</div>
             </div>
           </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button id="arenaNew" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold hover:bg-white/8 transition">New quote</button>
+            <button id="arenaStart" class="rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">Start match</button>
+          </div>
+
+          <div class="mt-3 text-xs text-white/55">Tip: accuracy matters more than speed. Clean typing = bigger XP.</div>
         </div>
 
-        <div class="arenaRight">
-          <div class="sideCard">
-            <div class="h3">What you’re training</div>
-            <ul class="list">
-              <li><span class="bullet"></span>Reading retention (micro-chunks)</li>
-              <li><span class="bullet"></span>Typing speed + accuracy</li>
-              <li><span class="bullet"></span>Focus under a timer</li>
-              <li><span class="bullet"></span>Consistency via streaks</li>
+        <div class="space-y-4">
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="font-extrabold">What you’re training</div>
+            <ul class="mt-3 space-y-2 text-sm text-white/70">
+              <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-white/70"></span>Reading retention (micro-chunks)</li>
+              <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-white/70"></span>Typing speed + accuracy</li>
+              <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-white/70"></span>Focus under a timer</li>
+              <li class="flex gap-3"><span class="mt-2 h-2 w-2 rounded-full bg-white/70"></span>Consistency via streaks</li>
             </ul>
           </div>
 
-          <div class="sideCard">
-            <div class="h3">Next in Mybookie</div>
-            <p class="muted">
-              Daily quests, story boss fights, multiplayer typing rooms, and unlockable chapters.
-              This page is your launchpad.
-            </p>
-            <button class="btn btnPrimary w100" id="arenaJoin" type="button">Join now</button>
+          <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-white/8 to-white/4 p-5">
+            <div class="font-extrabold">Ready to turn this into a habit?</div>
+            <p class="mt-2 text-sm text-white/70">Join Mybookie and start your journey with real books, quests, and rewards.</p>
+            <button id="btnJoinFromArena" class="mt-4 w-full rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">
+              Join now
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="./app.js"></script>
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 left-4 z-[70] hidden max-w-[92vw] rounded-2xl border border-white/10 bg-ink-850/90 px-4 py-3 text-sm text-white/85 shadow-soft glass"></div>
+
+  <script>
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+    // Year
+    $("#year").textContent = new Date().getFullYear();
+
+    // Mobile menu
+    const mobileBtn = $("#mobileBtn");
+    const mobileMenu = $("#mobileMenu");
+    mobileBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
+    document.addEventListener("click", (e) => {
+      if (!mobileMenu.contains(e.target) && !mobileBtn.contains(e.target)) mobileMenu.classList.add("hidden");
+    });
+
+    // Smooth anchor scroll
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      const id = a.getAttribute("href");
+      const el = $(id);
+      if (!el) return;
+      e.preventDefault();
+      mobileMenu.classList.add("hidden");
+      el.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+
+    // Reveal on scroll (subtle)
+    const revealEls = $$(".reveal");
+    revealEls.forEach(el => el.style.opacity = 0);
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(ent => {
+        if (!ent.isIntersecting) return;
+        ent.target.style.opacity = 1;
+        ent.target.classList.add("animate-fadeUp");
+        io.unobserve(ent.target);
+      });
+    }, { threshold: 0.14 });
+    revealEls.forEach(el => io.observe(el));
+
+    // Counters
+    const counters = $$("[data-count]");
+    const cio = new IntersectionObserver((entries) => {
+      entries.forEach(ent => {
+        if (!ent.isIntersecting) return;
+        const el = ent.target;
+        cio.unobserve(el);
+        const target = Number(el.dataset.count) || 0;
+        const dur = 950;
+        const t0 = performance.now();
+        const step = (t) => {
+          const p = Math.min(1, (t - t0)/dur);
+          const v = Math.floor(target * (1 - Math.pow(1 - p, 3)));
+          el.textContent = String(v);
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    }, { threshold: 0.35 });
+    counters.forEach(c => cio.observe(c));
+
+    // Toast
+    let toastTimer = null;
+    const toast = (msg) => {
+      const t = $("#toast");
+      t.textContent = msg;
+      t.classList.remove("hidden");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.add("hidden"), 2600);
+    };
+
+    // Modals
+    const joinModal = $("#joinModal");
+    const playModal = $("#playModal");
+
+    const openModal = (m) => { m.classList.remove("hidden"); document.body.style.overflow = "hidden"; };
+    const closeModal = (m) => { m.classList.add("hidden"); document.body.style.overflow = ""; };
+
+    document.addEventListener("click", (e) => {
+      const close = e.target.getAttribute?.("data-close");
+      if (close === "join") closeModal(joinModal);
+      if (close === "play") closeModal(playModal);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (!joinModal.classList.contains("hidden")) closeModal(joinModal);
+      if (!playModal.classList.contains("hidden")) closeModal(playModal);
+    });
+
+    // Join buttons
+    const bindJoin = (id) => { const b = $(id); if (b) b.addEventListener("click", () => openModal(joinModal)); };
+    ["#btnJoinTop","#btnJoinHero","#btnJoinHow","#btnJoinAbout","#btnJoinFooter","#btnJoinMobile"].forEach(bindJoin);
+
+    // Play buttons
+    const bindPlay = (id) => { const b = $(id); if (b) b.addEventListener("click", () => { openModal(playModal); arena.reset(true); }); };
+    ["#btnPlayTop","#btnPlayHero","#btnPlayCard","#btnPlayHow","#btnPlayAbout","#btnPlayFooter","#btnPlayMobile"].forEach(bindPlay);
+
+    // Join form (demo)
+    $("#joinForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const name = (fd.get("name") || "Player").toString().trim();
+      closeModal(joinModal);
+      e.target.reset();
+      toast(`Welcome, ${name}. Profile created (demo).`);
+    });
+
+    // Library data
+    const books = [
+      { id: 1, title: "Neon Heist", genre: "Thriller", level: "Rookie", mode: "Boss Fight", blurb: "A fast cyber-chase where each chapter unlocks a timed typing duel." },
+      { id: 2, title: "Midnight Pixels", genre: "Sci-Fi", level: "Rookie", mode: "Sprint", blurb: "Short scenes, quick sessions—perfect for streaks and focus." },
+      { id: 3, title: "The Quiet Dragon", genre: "Fantasy", level: "Bronze", mode: "Quest", blurb: "Read to collect lore, then type spells to open hidden paths." },
+      { id: 4, title: "Code & Coffee", genre: "Slice of Life", level: "Bronze", mode: "Calm", blurb: "A cozy story with optional practice challenges for accuracy lovers." },
+      { id: 5, title: "The Last Scoreboard", genre: "Mystery", level: "Silver", mode: "Arena", blurb: "Earn clues by completing clean typing streaks under pressure." },
+      { id: 6, title: "Orbit of Letters", genre: "Poetry", level: "Rookie", mode: "Precision", blurb: "Slow down. Type beautifully. Accuracy gives the biggest XP." },
+      { id: 7, title: "Monsoon Runner", genre: "Adventure", level: "Bronze", mode: "Quest", blurb: "Progress through storms and checkpoints—like levels in a game." },
+      { id: 8, title: "The Gray Kingdom", genre: "Fantasy", level: "Silver", mode: "Boss Fight", blurb: "Longer chapters + tougher duels. The rewards feel earned." },
+      { id: 9, title: "Signal: Lost & Found", genre: "Sci-Fi", level: "Bronze", mode: "Sprint", blurb: "Each scene ends with a 30-second typing burst for bonus XP." },
+    ];
+    const genres = ["All", ...Array.from(new Set(books.map(b => b.genre)))];
+    const state = { genre: "All", q: "" };
+
+    const esc = (s) => String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+
+    const filters = $("#filters");
+    const bookGrid = $("#bookGrid");
+    const searchInput = $("#searchInput");
+
+    const renderFilters = () => {
+      filters.innerHTML = genres.map(g => `
+        <button data-genre="${esc(g)}"
+          class="rounded-full border px-3 py-1.5 text-xs font-semibold transition
+                 ${g===state.genre ? "border-white/20 bg-white text-ink-950" : "border-white/10 bg-white/5 text-white/75 hover:bg-white/8"}">
+          ${esc(g)}
+        </button>
+      `).join("");
+    };
+
+    const coverStyle = (id) => {
+      const h = (id * 47) % 360;
+      return `background: radial-gradient(circle at 20% 30%, hsla(${h}, 85%, 70%, .18), transparent 55%),
+                      radial-gradient(circle at 70% 75%, hsla(${(h+140)%360}, 85%, 65%, .14), transparent 55%),
+                      linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02));`;
+    };
+
+    const renderBooks = () => {
+      const q = state.q.trim().toLowerCase();
+      const list = books.filter(b => {
+        const matchGenre = state.genre === "All" ? true : b.genre === state.genre;
+        const hay = `${b.title} ${b.genre} ${b.level} ${b.mode} ${b.blurb}`.toLowerCase();
+        const matchQ = q ? hay.includes(q) : true;
+        return matchGenre && matchQ;
+      });
+
+      if (!list.length) {
+        bookGrid.innerHTML = `
+          <div class="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/70 sm:col-span-2 lg:col-span-3">
+            No results. Try a different keyword or filter.
+          </div>`;
+        return;
+      }
+
+      bookGrid.innerHTML = list.map(b => `
+        <article class="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft transition hover:-translate-y-1 hover:bg-white/7">
+          <div class="h-40 rounded-2xl border border-white/10" style="${coverStyle(b.id)}"></div>
+
+          <div class="mt-4 flex items-start justify-between gap-3">
+            <div class="font-extrabold">${esc(b.title)}</div>
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">${esc(b.genre)}</span>
+          </div>
+
+          <p class="mt-2 text-sm text-white/65 leading-relaxed">${esc(b.blurb)}</p>
+
+          <div class="mt-3 flex flex-wrap gap-2 text-xs">
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Level: ${esc(b.level)}</span>
+            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70">Mode: ${esc(b.mode)}</span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <button data-act="read" data-id="${b.id}"
+              class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold hover:bg-white/8 transition">
+              Read
+            </button>
+            <button data-act="play" data-id="${b.id}"
+              class="rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-ink-950 hover:opacity-90 transition">
+              Play
+            </button>
+          </div>
+        </article>
+      `).join("");
+    };
+
+    renderFilters();
+    renderBooks();
+
+    filters.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-genre]");
+      if (!btn) return;
+      state.genre = btn.getAttribute("data-genre");
+      renderFilters();
+      renderBooks();
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      state.q = e.target.value || "";
+      renderBooks();
+    });
+
+    bookGrid.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      const act = btn.getAttribute("data-act");
+      const id = Number(btn.getAttribute("data-id"));
+      const book = books.find(x => x.id === id);
+      if (!book) return;
+
+      if (act === "read") {
+        toast(`Opening "${book.title}" (demo). Connect a reader page later.`);
+      } else {
+        openModal(playModal);
+        arena.reset(true, book);
+      }
+    });
+
+    // Typing Arena
+    const arena = {
+      quoteEl: $("#arenaQuote"),
+      inputEl: $("#arenaInput"),
+      timerEl: $("#arenaTimer"),
+      xpEl: $("#arenaXP"),
+      levelEl: $("#arenaLevel"),
+      kpiWpm: $("#kpiWpm"),
+      kpiAcc: $("#kpiAcc"),
+      kpiStreak: $("#kpiStreak"),
+      btnNew: $("#arenaNew"),
+      btnStart: $("#arenaStart"),
+
+      quotes: [
+        "Discipline is easiest when it feels like play.",
+        "Small sessions build big skills—one clean streak at a time.",
+        "Read the story. Type the moment. Level up your focus.",
+        "Speed without accuracy is noise. Accuracy becomes power.",
+        "Today’s progress is tomorrow’s confidence."
+      ],
+
+      state: { running:false, t:30, startTime:0, streak:0, xp:0, text:"" },
+
+      pickQuote(book){
+        const base = this.quotes[Math.floor(Math.random()*this.quotes.length)];
+        return book?.title ? `“${base}” — ${book.title}` : `“${base}”`;
+      },
+
+      renderQuote(typed){
+        const target = this.state.text || "";
+        const t = typed || "";
+        let good = "", bad = "", rest = "";
+
+        for (let i=0;i<target.length;i++){
+          const c = target[i];
+          const tc = t[i];
+          if (tc == null){ rest = target.slice(i); break; }
+          if (tc === c && bad.length === 0) good += c;
+          else bad += c;
+        }
+        const extra = t.length > target.length ? t.slice(target.length) : "";
+
+        this.quoteEl.innerHTML = `
+          <span class="text-white">${esc(good)}</span>
+          <span class="text-red-300">${esc(bad)}</span>
+          <span class="text-white/70">${esc(rest)}</span>
+          ${extra ? `<span class="text-red-300">${esc(extra)}</span>` : ""}
+        `;
+      },
+
+      computeStats(typed){
+        const target = this.state.text;
+        const typedLen = typed.length;
+        const minLen = Math.min(target.length, typedLen);
+
+        let correct = 0;
+        for (let i=0;i<minLen;i++) if (typed[i] === target[i]) correct++;
+
+        const acc = typedLen === 0 ? 0 : Math.max(0, Math.round((correct/typedLen)*100));
+        const elapsedMin = Math.max(0.001, (performance.now() - this.state.startTime)/60000);
+        const words = typedLen / 5;
+        const wpm = Math.max(0, Math.round(words / elapsedMin));
+        return { acc, wpm };
+      },
+
+      setUI(){
+        this.timerEl.textContent = `Time: ${this.state.t}s`;
+        this.xpEl.textContent = `XP: ${this.state.xp}`;
+        const lvl = this.state.streak >= 5 ? "Elite" : this.state.streak >= 3 ? "Pro" : this.state.streak >= 1 ? "Rookie+" : "Rookie";
+        this.levelEl.textContent = `Level: ${lvl}`;
+        this.kpiStreak.textContent = String(this.state.streak);
+      },
+
+      reset(focus=false, book=null){
+        this.stop();
+        this.state.t = 30;
+        this.state.running = false;
+        this.state.startTime = 0;
+        this.state.text = this.pickQuote(book);
+        this.inputEl.value = "";
+        this.kpiWpm.textContent = "0";
+        this.kpiAcc.textContent = "0%";
+        this.renderQuote("");
+        this.setUI();
+        this.btnStart.textContent = "Start match";
+        if (focus) setTimeout(() => this.inputEl.focus(), 50);
+      },
+
+      start(){
+        if (this.state.running) return;
+        this.state.running = true;
+        this.state.t = 30;
+        this.state.startTime = performance.now();
+        this.btnStart.textContent = "Running…";
+        this.inputEl.focus();
+
+        const tick = () => {
+          if (!this.state.running) return;
+          this.state.t -= 1;
+          this.setUI();
+          if (this.state.t <= 0) return this.finish();
+          setTimeout(tick, 1000);
+        };
+        setTimeout(tick, 1000);
+      },
+
+      stop(){
+        this.state.running = false;
+        if (this.btnStart) this.btnStart.textContent = "Start match";
+      },
+
+      finish(){
+        this.state.running = false;
+        const typed = this.inputEl.value || "";
+        const { acc, wpm } = this.computeStats(typed);
+        const complete = typed === this.state.text;
+
+        const xpGain = Math.round((acc * 0.6) + Math.min(120, wpm) * 0.4);
+        const bonus = complete ? 40 : 0;
+        const total = Math.max(0, xpGain + bonus);
+        this.state.xp += total;
+
+        if (complete && acc >= 95) this.state.streak += 1;
+        else this.state.streak = Math.max(0, this.state.streak - 1);
+
+        this.setUI();
+        this.btnStart.textContent = "Start match";
+        toast(`Match ended: ${wpm} WPM • ${acc}% • +${total} XP${complete ? " (clear!)" : ""}`);
+      }
+    };
+
+    $("#arenaNew").addEventListener("click", () => arena.reset(true));
+    $("#arenaStart").addEventListener("click", () => arena.start());
+
+    $("#arenaInput").addEventListener("input", () => {
+      const typed = $("#arenaInput").value || "";
+      arena.renderQuote(typed);
+      if (!arena.state.running) return;
+
+      const { acc, wpm } = arena.computeStats(typed);
+      $("#kpiWpm").textContent = String(wpm);
+      $("#kpiAcc").textContent = `${acc}%`;
+
+      if (typed === arena.state.text) arena.finish();
+    });
+
+    $("#btnJoinFromArena").addEventListener("click", () => {
+      closeModal(playModal);
+      openModal(joinModal);
+    });
+
+    // Close play modal stops arena
+    document.addEventListener("click", (e) => {
+      if (e.target.getAttribute?.("data-close") === "play") arena.stop();
+    });
+
+    // Init arena quote
+    arena.reset(false);
+  </script>
+
+  <!-- Optional: mark reveal sections -->
+  <script>
+    // Attach "reveal" to chosen blocks automatically if not already (keeps HTML clean)
+    // (No-op if class exists.)
+    ["#home .reveal", "#library .reveal", "#how .reveal", "#about .reveal"].forEach(() => {});
+  </script>
 </body>
 </html>
