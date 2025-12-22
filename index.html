@@ -1,541 +1,401 @@
-/* Mybookie demo site JS
-   - Animated type line
-   - On-scroll reveal
-   - Stat counters
-   - Mobile drawer
-   - Library render + filter + search
-   - Join modal
-   - Typing Arena mini-game (Play modal)
-*/
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mybookie — The e-Library</title>
+  <meta name="description" content="Mybookie is the dark-mode e-Library where reading meets online gaming. Read stories, type challenges, earn XP, climb leaderboards." />
+  <meta name="theme-color" content="#0f1115" />
 
-(() => {
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  <link rel="stylesheet" href="./styles.css" />
+</head>
 
-  const year = $("#year");
-  if (year) year.textContent = new Date().getFullYear();
+<body>
+  <!-- Ambient layers -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
 
-  // Topbar compact on scroll
-  const topbar = $("#topbar");
-  const onScroll = () => {
-    if (!topbar) return;
-    topbar.classList.toggle("isCompact", window.scrollY > 10);
-  };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
+  <!-- Top bar -->
+  <header class="topbar" id="topbar">
+    <a class="brand" href="./index.html" aria-label="Mybookie Home">
+      <span class="brandMark" aria-hidden="true"></span>
+      <span class="brandText">
+        <span class="brandName">Mybookie</span>
+        <span class="brandTag">the e-library</span>
+      </span>
+    </a>
 
-  // Mobile drawer
-  const drawer = $("#drawer");
-  const hamburger = $("#hamburger");
-  const drawerClose = $("#drawerClose");
+    <nav class="nav">
+      <a href="#home" class="navLink">Home</a>
+      <a href="#library" class="navLink">Library</a>
+      <a href="#how" class="navLink">How it works</a>
+      <a href="./about.html" class="navLink">About</a>
+      <button class="btn btnGhost" id="btnPlayTop" type="button">Play now</button>
+      <button class="btn btnPrimary" id="btnJoinTop" type="button">Join now</button>
+    </nav>
 
-  const openDrawer = () => {
-    if (!drawer || !hamburger) return;
-    drawer.classList.add("isOpen");
-    drawer.setAttribute("aria-hidden", "false");
-    hamburger.setAttribute("aria-expanded", "true");
-  };
-  const closeDrawer = () => {
-    if (!drawer || !hamburger) return;
-    drawer.classList.remove("isOpen");
-    drawer.setAttribute("aria-hidden", "true");
-    hamburger.setAttribute("aria-expanded", "false");
-  };
+    <button class="hamburger" id="hamburger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
 
-  if (hamburger) hamburger.addEventListener("click", () => (drawer.classList.contains("isOpen") ? closeDrawer() : openDrawer()));
-  if (drawerClose) drawerClose.addEventListener("click", closeDrawer);
-  if (drawer) {
-    drawer.addEventListener("click", (e) => {
-      const a = e.target.closest("a");
-      if (a) closeDrawer();
-    });
-  }
+  <!-- Mobile menu -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawerHeader">
+      <div class="drawerTitle">Menu</div>
+      <button class="iconBtn" id="drawerClose" type="button" aria-label="Close menu">✕</button>
+    </div>
+    <div class="drawerLinks">
+      <a href="#home" class="drawerLink">Home</a>
+      <a href="#library" class="drawerLink">Library</a>
+      <a href="#how" class="drawerLink">How it works</a>
+      <a href="./about.html" class="drawerLink">About</a>
+    </div>
+    <div class="drawerCtas">
+      <button class="btn btnGhost w100" id="btnPlayDrawer" type="button">Play now</button>
+      <button class="btn btnPrimary w100" id="btnJoinDrawer" type="button">Join now</button>
+    </div>
+  </aside>
 
-  // Smooth scroll for same-page anchors (keeps things clean)
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[href^="#"]');
-    if (!a) return;
-    const id = a.getAttribute("href");
-    const el = id && $(id);
-    if (!el) return;
-
-    e.preventDefault();
-    closeDrawer();
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  // Reveal on scroll
-  const revealEls = $$(".reveal");
-  if (revealEls.length) {
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((ent) => ent.isIntersecting && ent.target.classList.add("inView")),
-      { threshold: 0.12 }
-    );
-    revealEls.forEach((el) => io.observe(el));
-  }
-
-  // Typewriter
-  const typeLine = $("#typeLine");
-  if (typeLine && typeLine.dataset.text) {
-    const txt = typeLine.dataset.text.trim();
-    let i = 0;
-    const speed = 18;
-    const tick = () => {
-      i++;
-      typeLine.textContent = txt.slice(0, i);
-      if (i < txt.length) setTimeout(tick, speed);
-    };
-    setTimeout(tick, 350);
-  }
-
-  // Counters
-  const counterSpans = $$("[data-count]");
-  if (counterSpans.length) {
-    const counterIO = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((ent) => {
-          if (!ent.isIntersecting) return;
-          const el = ent.target;
-          counterIO.unobserve(el);
-          const target = Number(el.getAttribute("data-count")) || 0;
-          const start = 0;
-          const dur = 950;
-          const t0 = performance.now();
-          const step = (t) => {
-            const p = Math.min(1, (t - t0) / dur);
-            const val = Math.floor(start + (target - start) * (1 - Math.pow(1 - p, 3)));
-            el.textContent = String(val);
-            if (p < 1) requestAnimationFrame(step);
-          };
-          requestAnimationFrame(step);
-        });
-      },
-      { threshold: 0.35 }
-    );
-    counterSpans.forEach((s) => counterIO.observe(s));
-  }
-
-  // Modals: Join + Play
-  const joinModal = $("#joinModal");
-  const playModal = $("#playModal");
-  const openModal = (m) => {
-    if (!m) return;
-    m.classList.add("isOpen");
-    m.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-  };
-  const closeModal = (m) => {
-    if (!m) return;
-    m.classList.remove("isOpen");
-    m.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  };
-
-  const bindModal = (m, closeBtnSel) => {
-    if (!m) return;
-    const closeBtn = $(closeBtnSel);
-    if (closeBtn) closeBtn.addEventListener("click", () => closeModal(m));
-    m.addEventListener("click", (e) => {
-      const wantsClose = e.target && e.target.getAttribute && e.target.getAttribute("data-close") === "1";
-      if (wantsClose) closeModal(m);
-    });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && m.classList.contains("isOpen")) closeModal(m);
-    });
-  };
-
-  bindModal(joinModal, "#joinClose");
-  bindModal(playModal, "#playClose");
-
-  const joinButtons = [
-    "#btnJoinTop", "#btnJoinHero", "#btnJoinHow", "#btnJoinFooter", "#openJoinFooter",
-    "#btnJoinAboutTop", "#btnJoinAboutHero", "#btnJoinAboutBottom", "#btnJoinAboutFooter",
-    "#btnJoinDrawer", "#btnJoinAboutDrawer"
-  ];
-  joinButtons.forEach((sel) => {
-    const b = $(sel);
-    if (b) b.addEventListener("click", (e) => {
-      e.preventDefault();
-      closeDrawer();
-      openModal(joinModal);
-      const name = $("#name");
-      if (name) setTimeout(() => name.focus(), 50);
-    });
-  });
-
-  const playButtons = ["#btnPlayTop", "#btnPlayHero", "#btnPlayCard", "#btnPlayHow", "#btnPlayFooter", "#btnPlayDrawer"];
-  playButtons.forEach((sel) => {
-    const b = $(sel);
-    if (b) b.addEventListener("click", () => {
-      closeDrawer();
-      openModal(playModal);
-      arena.reset(true);
-    });
-  });
-
-  // Join form (demo)
-  const joinForm = $("#joinForm");
-  if (joinForm) {
-    joinForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const fd = new FormData(joinForm);
-      const name = String(fd.get("name") || "Player").trim();
-      closeModal(joinModal);
-      toast(`Welcome, ${name}. Profile created (demo).`);
-      joinForm.reset();
-    });
-  }
-
-  // Library
-  const bookGrid = $("#bookGrid");
-  const filtersEl = $("#filters");
-  const searchInput = $("#searchInput");
-
-  const books = [
-    { id: 1, title: "Neon Heist", genre: "Thriller", level: "Rookie", mode: "Boss Fight", blurb: "A fast cyber-chase where each chapter unlocks a timed typing duel." },
-    { id: 2, title: "Midnight Pixels", genre: "Sci-Fi", level: "Rookie", mode: "Sprint", blurb: "Short scenes, high stakes—perfect for quick sessions and streaks." },
-    { id: 3, title: "The Quiet Dragon", genre: "Fantasy", level: "Bronze", mode: "Quest", blurb: "Read to collect lore, then type spells to open hidden paths." },
-    { id: 4, title: "Code & Coffee", genre: "Slice of Life", level: "Bronze", mode: "Calm", blurb: "A cozy story with optional practice challenges for accuracy lovers." },
-    { id: 5, title: "The Last Scoreboard", genre: "Mystery", level: "Silver", mode: "Arena", blurb: "Clues are earned by completing clean typing streaks under pressure." },
-    { id: 6, title: "Orbit of Letters", genre: "Poetry", level: "Rookie", mode: "Precision", blurb: "Slow down. Type beautifully. Accuracy gives the biggest XP." },
-    { id: 7, title: "Monsoon Runner", genre: "Adventure", level: "Bronze", mode: "Quest", blurb: "Progress through storms and checkpoints—like levels in a game." },
-    { id: 8, title: "The Gray Kingdom", genre: "Fantasy", level: "Silver", mode: "Boss Fight", blurb: "Longer chapters + tougher duels. The rewards feel earned." },
-    { id: 9, title: "Signal: Lost & Found", genre: "Sci-Fi", level: "Bronze", mode: "Sprint", blurb: "Each scene ends with a 30-second typing burst for bonus XP." }
-  ];
-
-  const genres = ["All", ...Array.from(new Set(books.map(b => b.genre)))];
-
-  const state = {
-    genre: "All",
-    q: ""
-  };
-
-  const esc = (s) => String(s).replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  }[m]));
-
-  const renderFilters = () => {
-    if (!filtersEl) return;
-    filtersEl.innerHTML = genres.map(g => `
-      <button class="filterBtn ${g === state.genre ? "isActive" : ""}" data-genre="${esc(g)}" type="button">
-        ${esc(g)}
-      </button>
-    `).join("");
-    filtersEl.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-genre]");
-      if (!btn) return;
-      state.genre = btn.getAttribute("data-genre");
-      renderFilters();
-      renderBooks();
-    });
-  };
-
-  const bookCoverHue = (id) => {
-    // deterministic pseudo-style
-    const h = (id * 47) % 360;
-    return `radial-gradient(circle at 20% 30%, hsla(${h}, 90%, 70%, .22), transparent 55%),
-            radial-gradient(circle at 70% 70%, hsla(${(h + 140) % 360}, 90%, 65%, .18), transparent 55%),
-            linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.02))`;
-  };
-
-  const renderBooks = () => {
-    if (!bookGrid) return;
-
-    const q = state.q.trim().toLowerCase();
-    const list = books.filter(b => {
-      const matchGenre = state.genre === "All" ? true : b.genre === state.genre;
-      const hay = `${b.title} ${b.genre} ${b.level} ${b.mode} ${b.blurb}`.toLowerCase();
-      const matchQ = q ? hay.includes(q) : true;
-      return matchGenre && matchQ;
-    });
-
-    if (!list.length) {
-      bookGrid.innerHTML = `
-        <div class="card reveal inView" style="grid-column: 1 / -1;">
-          <div class="bookTitle">No results</div>
-          <div class="bookMeta">Try a different keyword or switch the filter.</div>
-        </div>
-      `;
-      return;
-    }
-
-    bookGrid.innerHTML = list.map(b => `
-      <article class="card reveal inView" data-book="${b.id}">
-        <div class="cover" style="background: ${bookCoverHue(b.id)};"></div>
-
-        <div class="cardTop">
-          <div class="bookTitle">${esc(b.title)}</div>
-          <div class="chip">${esc(b.genre)}</div>
+  <!-- Hero -->
+  <main id="home" class="section hero">
+    <div class="container heroGrid">
+      <div class="heroLeft reveal">
+        <div class="pill">
+          <span class="dot"></span>
+          Reading × Typing × Online Gaming
         </div>
 
-        <div class="bookMeta">${esc(b.blurb)}</div>
+        <h1 class="h1">
+          Welcome to <span class="accent">Mybookie</span>
+          <br />
+          <span class="subhead" id="typeLine" data-text="An e-Library where stories become levels, and typing becomes your power."></span>
+        </h1>
 
-        <div class="badges">
-          <span class="badge level">Level: ${esc(b.level)}</span>
-          <span class="badge mode">Mode: ${esc(b.mode)}</span>
+        <p class="lead">
+          Mybookie is the upcoming best e-books solution built like a game:
+          read chapters, complete typing challenges, earn XP, unlock rewards, and climb the leaderboard.
+        </p>
+
+        <div class="heroCtas">
+          <button class="btn btnPrimary" id="btnJoinHero" type="button">
+            Join now
+            <span class="btnSpark" aria-hidden="true"></span>
+          </button>
+
+          <button class="btn btnGhost" id="btnPlayHero" type="button">
+            Play & practice
+          </button>
         </div>
 
-        <div class="cardBtns">
-          <button class="btn btnGhost" data-action="read" type="button">Read</button>
-          <button class="btn btnPrimary" data-action="play" type="button">Play</button>
+        <div class="heroStats">
+          <div class="statCard">
+            <div class="statValue"><span data-count="120">0</span>+</div>
+            <div class="statLabel">Curated books</div>
+          </div>
+          <div class="statCard">
+            <div class="statValue"><span data-count="9">0</span> modes</div>
+            <div class="statLabel">Typing & reading quests</div>
+          </div>
+          <div class="statCard">
+            <div class="statValue"><span data-count="24">0</span>/7</div>
+            <div class="statLabel">Always-on play</div>
+          </div>
         </div>
-      </article>
-    `).join("");
-  };
+      </div>
 
-  if (filtersEl) renderFilters();
-  if (bookGrid) renderBooks();
+      <div class="heroRight reveal">
+        <div class="heroOrb">
+          <div class="orbRing"></div>
+          <div class="orbRing ring2"></div>
+          <div class="orbRing ring3"></div>
 
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      state.q = e.target.value || "";
-      renderBooks();
-    });
-  }
+          <div class="orbCard">
+            <div class="orbTop">
+              <div class="orbBadge">Live Challenge</div>
+              <div class="orbMini">Accuracy • Speed • Focus</div>
+            </div>
+            <div class="orbBig">
+              <div class="orbTitle">Typing Arena</div>
+              <div class="orbText">Beat the clock. Earn XP. Unlock chapters.</div>
+            </div>
 
-  // Book interactions
-  if (bookGrid) {
-    bookGrid.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-action]");
-      if (!btn) return;
-      const card = e.target.closest("[data-book]");
-      const id = Number(card?.getAttribute("data-book")) || 0;
-      const book = books.find(b => b.id === id);
-      const act = btn.getAttribute("data-action");
+            <div class="orbMeta">
+              <div class="chip">XP +50</div>
+              <div class="chip">Streak bonus</div>
+              <div class="chip">Rank up</div>
+            </div>
 
-      if (!book) return;
+            <button class="btn btnPrimary w100" id="btnPlayCard" type="button">Start a quick match</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
-      if (act === "read") {
-        toast(`Opening "${book.title}" (demo). Replace this with your reader screen.`);
-      }
-      if (act === "play") {
-        openModal(playModal);
-        arena.reset(true, book);
-      }
-    });
-  }
+  <!-- Library -->
+  <section id="library" class="section">
+    <div class="container">
+      <div class="sectionHead reveal">
+        <h2 class="h2">Library</h2>
+        <p class="muted">
+          Pick a title. Then choose: <strong>Read</strong> (chill) or <strong>Play</strong> (typing challenge).
+          This demo uses sample books—swap with your real catalog anytime.
+        </p>
+      </div>
 
-  // Toast (lightweight)
-  let toastT = null;
-  const toast = (msg) => {
-    let el = $("#toast");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "toast";
-      el.style.position = "fixed";
-      el.style.left = "18px";
-      el.style.bottom = "18px";
-      el.style.zIndex = "120";
-      el.style.maxWidth = "min(560px, 92vw)";
-      el.style.padding = "12px 14px";
-      el.style.borderRadius = "16px";
-      el.style.border = "1px solid rgba(255,255,255,.12)";
-      el.style.background = "rgba(12,14,18,.92)";
-      el.style.backdropFilter = "blur(14px)";
-      el.style.boxShadow = "0 16px 45px rgba(0,0,0,.55)";
-      el.style.color = "rgba(255,255,255,.92)";
-      el.style.transform = "translateY(10px)";
-      el.style.opacity = "0";
-      el.style.transition = "opacity .22s ease, transform .22s ease";
-      document.body.appendChild(el);
-    }
-    el.textContent = msg;
-    clearTimeout(toastT);
-    requestAnimationFrame(() => {
-      el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
-    });
-    toastT = setTimeout(() => {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(10px)";
-    }, 2600);
-  };
+      <div class="libraryTools reveal">
+        <div class="search">
+          <span class="searchIcon" aria-hidden="true">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search books, genres, tags…" aria-label="Search books" />
+        </div>
 
-  // Typing Arena
-  const arena = {
-    quoteEl: $("#arenaQuote"),
-    inputEl: $("#arenaInput"),
-    timerEl: $("#arenaTimer"),
-    xpEl: $("#arenaXP"),
-    levelEl: $("#arenaLevel"),
-    kpiWpm: $("#kpiWpm"),
-    kpiAcc: $("#kpiAcc"),
-    kpiStreak: $("#kpiStreak"),
-    btnNew: $("#arenaNew"),
-    btnStart: $("#arenaStart"),
-    btnJoin: $("#arenaJoin"),
+        <div class="filters" id="filters" aria-label="Genre filters"></div>
+      </div>
 
-    quotes: [
-      "Discipline is easiest when it feels like play.",
-      "Small sessions build big skills—one clean streak at a time.",
-      "Read the story. Type the moment. Level up your focus.",
-      "Speed without accuracy is noise. Accuracy becomes power.",
-      "Today’s progress is tomorrow’s confidence."
-    ],
+      <div class="cardsGrid" id="bookGrid" aria-live="polite"></div>
+    </div>
+  </section>
 
-    state: {
-      running: false,
-      t: 30,
-      startTime: 0,
-      streak: 0,
-      xp: 0,
-      text: "",
-      bookHint: ""
-    },
+  <!-- How it works -->
+  <section id="how" class="section">
+    <div class="container">
+      <div class="sectionHead reveal">
+        <h2 class="h2">How it works</h2>
+        <p class="muted">Mybookie blends e-books with game loops—simple, addictive, and skill-building.</p>
+      </div>
 
-    pickQuote(book) {
-      const base = this.quotes[Math.floor(Math.random() * this.quotes.length)];
-      if (book?.title) return `“${base}” — ${book.title}`;
-      return `“${base}”`;
-    },
+      <div class="steps">
+        <article class="stepCard reveal">
+          <div class="stepNum">01</div>
+          <h3 class="h3">Choose your story</h3>
+          <p class="muted">Browse genres, levels, and challenges. Every book is a “world” with quests.</p>
+        </article>
 
-    setQuote(text) {
-      this.state.text = text;
-      this.renderQuote("");
-    },
+        <article class="stepCard reveal">
+          <div class="stepNum">02</div>
+          <h3 class="h3">Read to unlock</h3>
+          <p class="muted">Finish chapters, collect highlights, and unlock new scenes like levels.</p>
+        </article>
 
-    renderQuote(typed) {
-      if (!this.quoteEl) return;
-      const target = this.state.text || "";
-      const t = typed || "";
-      let good = "";
-      let bad = "";
-      let rest = "";
+        <article class="stepCard reveal">
+          <div class="stepNum">03</div>
+          <h3 class="h3">Type to win</h3>
+          <p class="muted">Fight bosses via typing duels—accuracy + speed = XP + rewards.</p>
+        </article>
 
-      for (let i = 0; i < target.length; i++) {
-        const c = target[i];
-        const tc = t[i];
-        if (tc == null) { rest = target.slice(i); break; }
-        if (tc === c && bad.length === 0) good += c;
-        else bad += c; // once wrong starts, mark remaining as bad until correction
-      }
+        <article class="stepCard reveal">
+          <div class="stepNum">04</div>
+          <h3 class="h3">Rank up</h3>
+          <p class="muted">Streaks, badges, seasonal leaderboards, and skill stats keep you moving.</p>
+        </article>
+      </div>
 
-      // If user typed longer, consider extra as bad contextually
-      const extra = t.length > target.length ? t.slice(target.length) : "";
+      <div class="ctaBanner reveal">
+        <div>
+          <h3 class="h3">Join now and start your journey</h3>
+          <p class="muted">Build a reading habit without boredom—turn it into a game you actually want to play.</p>
+        </div>
+        <div class="ctaRow">
+          <button class="btn btnGhost" id="btnPlayHow" type="button">Play now</button>
+          <button class="btn btnPrimary" id="btnJoinHow" type="button">Join now</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      this.quoteEl.innerHTML = `
-        <span class="good">${esc(good)}</span><span class="bad">${esc(bad)}</span><span class="rest">${esc(rest)}</span>
-        ${extra ? `<span class="bad">${esc(extra)}</span>` : ""}
-      `;
-    },
+  <!-- Testimonials -->
+  <section class="section">
+    <div class="container">
+      <div class="sectionHead reveal">
+        <h2 class="h2">Why people stick with it</h2>
+        <p class="muted">Designed for attention spans that love games—but still want growth.</p>
+      </div>
 
-    computeStats(typed) {
-      const target = this.state.text;
-      const typedLen = typed.length;
-      const minLen = Math.min(target.length, typedLen);
+      <div class="quotes">
+        <figure class="quoteCard reveal">
+          <blockquote>“Finally, a library that doesn’t feel like homework. The XP loop is dangerously motivating.”</blockquote>
+          <figcaption>— Early tester</figcaption>
+        </figure>
+        <figure class="quoteCard reveal">
+          <blockquote>“I came for typing speed, stayed for the stories. It’s like reading with a heartbeat.”</blockquote>
+          <figcaption>— Student</figcaption>
+        </figure>
+        <figure class="quoteCard reveal">
+          <blockquote>“Leaderboards made me consistent. Consistency made me better. Simple.”</blockquote>
+          <figcaption>— Creator</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
 
-      let correct = 0;
-      for (let i = 0; i < minLen; i++) if (typed[i] === target[i]) correct++;
+  <!-- FAQ -->
+  <section class="section">
+    <div class="container">
+      <div class="sectionHead reveal">
+        <h2 class="h2">FAQ</h2>
+        <p class="muted">Quick answers for the Mybookie concept.</p>
+      </div>
 
-      const acc = typedLen === 0 ? 0 : Math.max(0, Math.round((correct / typedLen) * 100));
-      const elapsedMin = Math.max(0.001, (performance.now() - this.state.startTime) / 60000);
-      const words = typedLen / 5;
-      const wpm = Math.max(0, Math.round(words / elapsedMin));
+      <div class="faq">
+        <details class="faqItem reveal">
+          <summary>Is Mybookie only for gamers?</summary>
+          <p class="muted">No. It’s for anyone who wants reading to feel effortless. Gaming elements are optional—but motivating.</p>
+        </details>
+        <details class="faqItem reveal">
+          <summary>What do I gain from typing challenges?</summary>
+          <p class="muted">Speed, accuracy, focus, and a measurable skill curve—plus XP and progression to keep you consistent.</p>
+        </details>
+        <details class="faqItem reveal">
+          <summary>Can I just read without playing?</summary>
+          <p class="muted">Yes. “Read Mode” is calm. “Play Mode” is competitive. Switch anytime.</p>
+        </details>
+      </div>
+    </div>
+  </section>
 
-      return { acc, wpm, correct };
-    },
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footerGrid">
+      <div>
+        <div class="footerBrand">
+          <span class="brandMark" aria-hidden="true"></span>
+          <div>
+            <div class="footerName">Mybookie</div>
+            <div class="muted">The e-Library built like a game.</div>
+          </div>
+        </div>
+        <div class="muted footerSmall">© <span id="year"></span> Mybookie. All rights reserved.</div>
+      </div>
 
-    setUI() {
-      if (this.timerEl) this.timerEl.textContent = `Time: ${this.state.t}s`;
-      if (this.xpEl) this.xpEl.textContent = `XP: ${this.state.xp}`;
-      if (this.levelEl) {
-        const lvl = this.state.streak >= 5 ? "Elite" : this.state.streak >= 3 ? "Pro" : this.state.streak >= 1 ? "Rookie+" : "Rookie";
-        this.levelEl.textContent = `Level: ${lvl}`;
-      }
-      if (this.kpiStreak) this.kpiStreak.textContent = String(this.state.streak);
-    },
+      <div class="footerLinks">
+        <a href="./about.html">About</a>
+        <a href="#library">Library</a>
+        <a href="#how">How it works</a>
+        <a href="#" id="openJoinFooter">Join</a>
+      </div>
 
-    reset(focus = false, book = null) {
-      this.stop();
-      this.state.t = 30;
-      this.state.running = false;
-      this.state.startTime = 0;
-      this.state.text = this.pickQuote(book);
-      this.state.bookHint = book?.title ? book.title : "";
-      if (this.inputEl) this.inputEl.value = "";
-      if (this.kpiWpm) this.kpiWpm.textContent = "0";
-      if (this.kpiAcc) this.kpiAcc.textContent = "0%";
-      this.setQuote(this.state.text);
-      this.setUI();
-      if (this.btnStart) this.btnStart.textContent = "Start match";
-      if (focus && this.inputEl) setTimeout(() => this.inputEl.focus(), 50);
-    },
+      <div class="footerCta">
+        <button class="btn btnGhost" id="btnPlayFooter" type="button">Play now</button>
+        <button class="btn btnPrimary" id="btnJoinFooter" type="button">Join now</button>
+      </div>
+    </div>
+  </footer>
 
-    start() {
-      if (!this.inputEl) return;
-      if (this.state.running) return;
+  <!-- Join Modal -->
+  <div class="modal" id="joinModal" aria-hidden="true" role="dialog" aria-label="Join Mybookie">
+    <div class="modalBackdrop" data-close="1"></div>
+    <div class="modalCard" role="document">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">Join Mybookie</div>
+          <div class="muted">Start your journey: read, play, level up.</div>
+        </div>
+        <button class="iconBtn" id="joinClose" type="button" aria-label="Close">✕</button>
+      </div>
 
-      this.state.running = true;
-      this.state.t = 30;
-      this.state.startTime = performance.now();
-      this.inputEl.disabled = false;
-      this.inputEl.focus();
-      if (this.btnStart) this.btnStart.textContent = "Running…";
+      <form class="form" id="joinForm">
+        <div class="formRow">
+          <label class="label" for="name">Name</label>
+          <input class="input" id="name" name="name" placeholder="Your name" required />
+        </div>
+        <div class="formRow">
+          <label class="label" for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="formRow">
+          <label class="label" for="goal">Your goal</label>
+          <select class="input" id="goal" name="goal">
+            <option>Build a reading habit</option>
+            <option>Improve typing speed</option>
+            <option>Both: read + play</option>
+          </select>
+        </div>
 
-      const tick = () => {
-        if (!this.state.running) return;
-        this.state.t -= 1;
-        this.setUI();
-        if (this.state.t <= 0) {
-          this.finish();
-          return;
-        }
-        setTimeout(tick, 1000);
-      };
-      setTimeout(tick, 1000);
-    },
+        <button class="btn btnPrimary w100" type="submit">Create free profile</button>
+        <div class="muted small">
+          Demo note: this form doesn’t send data anywhere yet—connect your backend later.
+        </div>
+      </form>
+    </div>
+  </div>
 
-    stop() {
-      this.state.running = false;
-      if (this.btnStart) this.btnStart.textContent = "Start match";
-    },
+  <!-- Play Modal (Typing Arena) -->
+  <div class="modal" id="playModal" aria-hidden="true" role="dialog" aria-label="Typing Arena">
+    <div class="modalBackdrop" data-close="1"></div>
+    <div class="modalCard modalWide" role="document">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">Typing Arena</div>
+          <div class="muted">Type the quote. Beat the clock. Earn XP.</div>
+        </div>
+        <button class="iconBtn" id="playClose" type="button" aria-label="Close">✕</button>
+      </div>
 
-    finish() {
-      this.state.running = false;
-      if (!this.inputEl) return;
+      <div class="arena">
+        <div class="arenaLeft">
+          <div class="arenaBox">
+            <div class="arenaTop">
+              <div class="chip" id="arenaLevel">Level: Rookie</div>
+              <div class="chip" id="arenaTimer">Time: 30s</div>
+              <div class="chip" id="arenaXP">XP: 0</div>
+            </div>
 
-      const typed = this.inputEl.value || "";
-      const { acc, wpm } = this.computeStats(typed);
-      const complete = typed === this.state.text;
+            <div class="quote" id="arenaQuote" aria-label="Quote to type"></div>
 
-      // XP logic (simple + satisfying)
-      const xpGain = Math.round((acc * 0.6) + Math.min(120, wpm) * 0.4);
-      const bonus = complete ? 40 : 0;
-      const total = Math.max(0, xpGain + bonus);
+            <textarea class="arenaInput" id="arenaInput" rows="4" placeholder="Start typing here…"></textarea>
 
-      this.state.xp += total;
+            <div class="arenaStats">
+              <div class="kpi">
+                <div class="kpiVal" id="kpiWpm">0</div>
+                <div class="kpiLab">WPM</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiVal" id="kpiAcc">0%</div>
+                <div class="kpiLab">Accuracy</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiVal" id="kpiStreak">0</div>
+                <div class="kpiLab">Streak</div>
+              </div>
+            </div>
 
-      if (complete && acc >= 95) this.state.streak += 1;
-      else this.state.streak = Math.max(0, this.state.streak - 1);
+            <div class="arenaBtns">
+              <button class="btn btnGhost" id="arenaNew" type="button">New quote</button>
+              <button class="btn btnPrimary" id="arenaStart" type="button">Start match</button>
+            </div>
 
-      this.setUI();
-      if (this.btnStart) this.btnStart.textContent = "Start match";
-      toast(`Match ended: ${wpm} WPM • ${acc}% • +${total} XP${complete ? " (clear!)" : ""}`);
-    }
-  };
+            <div class="muted small" id="arenaHint">
+              Tip: accuracy matters more than speed. Clean typing = bigger XP.
+            </div>
+          </div>
+        </div>
 
-  if (arena.btnNew) arena.btnNew.addEventListener("click", () => arena.reset(true));
-  if (arena.btnStart) arena.btnStart.addEventListener("click", () => arena.start());
-  if (arena.btnJoin) arena.btnJoin.addEventListener("click", () => openModal(joinModal));
+        <div class="arenaRight">
+          <div class="sideCard">
+            <div class="h3">What you’re training</div>
+            <ul class="list">
+              <li><span class="bullet"></span>Reading retention (micro-chunks)</li>
+              <li><span class="bullet"></span>Typing speed + accuracy</li>
+              <li><span class="bullet"></span>Focus under a timer</li>
+              <li><span class="bullet"></span>Consistency via streaks</li>
+            </ul>
+          </div>
 
-  if (arena.inputEl) {
-    arena.inputEl.addEventListener("input", () => {
-      const typed = arena.inputEl.value || "";
-      arena.renderQuote(typed);
+          <div class="sideCard">
+            <div class="h3">Next in Mybookie</div>
+            <p class="muted">
+              Daily quests, story boss fights, multiplayer typing rooms, and unlockable chapters.
+              This page is your launchpad.
+            </p>
+            <button class="btn btnPrimary w100" id="arenaJoin" type="button">Join now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      if (!arena.state.running) return;
-
-      const { acc, wpm } = arena.computeStats(typed);
-      if (arena.kpiWpm) arena.kpiWpm.textContent = String(wpm);
-      if (arena.kpiAcc) arena.kpiAcc.textContent = `${acc}%`;
-
-      // Auto-finish if exact match
-      if (typed === arena.state.text) arena.finish();
-    });
-  }
-
-  // Ensure input disabled when modal closed (nice UX)
-  const playClose = $("#playClose");
-  if (playClose) playClose.addEventListener("click", () => arena.stop());
-
-})();
+  <script src="./app.js"></script>
+</body>
+</html>
